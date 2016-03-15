@@ -56,7 +56,8 @@ ExternalProject_Add(boost
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
                     BUILD_IN_SOURCE 1
                     CONFIGURE_COMMAND ${BOOST_CONFIGURE_COMMAND}
-                    BUILD_COMMAND ./b2)
+                    BUILD_COMMAND ./b2
+                    INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX})
 
 # Build Python.
 set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
