@@ -38,3 +38,9 @@ set(UDUNITS_CMAKE_COMMAND ${CMAKE_COMMAND} ../udunits -Wno-dev
 ExternalProject_Add(udunits 
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/udunits
                     CMAKE_COMMAND ${UDUNITS_CMAKE_COMMAND})
+
+# Build Python.
+set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
+ExternalProject_Add(Python 
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
+                    CONFIGURE_COMMAND ${PYTHON_CONFIGURE_COMMAND})
