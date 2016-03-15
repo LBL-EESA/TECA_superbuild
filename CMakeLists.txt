@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.0)
 
 project(TECA_3rdparty)
 
+# The following versions of each library are installed by this script:
+# MPICH:   
+# HDF5:          1.8.16
+# NetCDF:        4.4.0
+# UDUnits:       2.2.20
+# Python:        2.7.11
+# Numpy:
+# Mpi4py:
+# Boost:         1_60_0
+# Libxlsxwriter: 
+
 option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
 
 # We need to override the default value of CMAKE_INSTALL_PREFIX.
@@ -39,8 +50,17 @@ ExternalProject_Add(udunits
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/udunits
                     CMAKE_COMMAND ${UDUNITS_CMAKE_COMMAND})
 
+# Build Boost.
+set(BOOST_CONFIGURE_COMMAND sh bootstrap.sh --prefix=${CMAKE_INSTALL_PREFIX} --with-libraries=program_options)
+ExternalProject_Add(boost
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
+                    BUILD_IN_SOURCE 1
+                    CONFIGURE_COMMAND ${BOOST_CONFIGURE_COMMAND}
+                    BUILD_COMMAND ./b2)
+
 # Build Python.
 set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
 ExternalProject_Add(Python 
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
                     CONFIGURE_COMMAND ${PYTHON_CONFIGURE_COMMAND})
+
