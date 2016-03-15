@@ -32,3 +32,9 @@ ExternalProject_Add(netcdf
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/netcdf
                     CMAKE_COMMAND ${NETCDF_CMAKE_COMMAND})
 
+# Build UDUnits.
+set(UDUNITS_CMAKE_COMMAND ${CMAKE_COMMAND} ../udunits -Wno-dev 
+                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
+ExternalProject_Add(udunits 
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/udunits
+                    CMAKE_COMMAND ${UDUNITS_CMAKE_COMMAND})

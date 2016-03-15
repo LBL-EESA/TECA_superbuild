@@ -1,0 +1,586 @@
+<html lang="en">
+<head>
+<title>UDUNITS 2.2.20 Manual</title>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="description" content="UDUNITS 2.2.20 Manual">
+<meta name="generator" content="makeinfo 4.13">
+<link title="Top" rel="top" href="#Top">
+<link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
+<!--
+
+   Copyright 2014 University Corporation for Atmospheric Research and contributors.
+All rights reserved.
+
+This software was developed by the Unidata Program Center of the
+University Corporation for Atmospheric Research (UCAR)
+<http://www.unidata.ucar.edu>.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+   1) Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+   2) Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+   3) Neither the names of the development group, the copyright holders, nor the
+      names of contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+   4) This license shall terminate automatically and you may no longer exercise
+      any of the rights granted to you by this license as of the date you
+      commence an action, including a cross-claim or counterclaim, against
+      the copyright holders or any contributor alleging that this software
+      infringes a patent. This termination provision shall not apply for an
+      action alleging patent infringement by combinations of this software with
+      other software or hardware.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE CONTRIBUTORS
+OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
+-->
+<meta http-equiv="Content-Style-Type" content="text/css">
+<style type="text/css"><!--
+  pre.display { font-family:inherit }
+  pre.format  { font-family:inherit }
+  pre.smalldisplay { font-family:inherit; font-size:smaller }
+  pre.smallformat  { font-family:inherit; font-size:smaller }
+  pre.smallexample { font-size:smaller }
+  pre.smalllisp    { font-size:smaller }
+  span.sc    { font-variant:small-caps }
+  span.roman { font-family:serif; font-weight:normal; } 
+  span.sansserif { font-family:sans-serif; font-weight:normal; } 
+--></style>
+</head>
+<body>
+<h1 class="settitle">UDUNITS 2.2.20 Manual</h1>
+<div class="contents">
+<h2>Table of Contents</h2>
+<ul>
+<li><a name="toc_Top" href="#Top">UDUNITS-2</a>
+<li><a name="toc_Introduction" href="#Introduction">1 Introduction</a>
+<li><a name="toc_Differences" href="#Differences">2 How This Package Differs from the Original <code>UDUNITS</code> Package</a>
+<li><a name="toc_Installation" href="#Installation">3 Installing this Package</a>
+<ul>
+<li><a href="#Binary">3.1 Installing from a Binary Distribution</a>
+<ul>
+<li><a href="#Binary">3.1.1 64-bit CentOS 6.4</a>
+<li><a href="#Binary">3.1.2 32-bit Ubuntu 12</a>
+</li></ul>
+<li><a href="#Source">3.2 Installing from a Source Distribution</a>
+<ul>
+<li><a href="#Prerequisites">3.2.1 Prerequisites for This Package</a>
+<li><a href="#Obtain">3.2.2 Obtaining this Package</a>
+<li><a href="#Unix">3.2.3 Unix Installation Instructions</a>
+<ul>
+<li><a href="#Autoconf">3.2.3.1 Autoconf-based Installation</a>
+<li><a href="#CMake">3.2.3.2 CMake-based Installation</a>
+</li></ul>
+<li><a href="#Windows">3.2.4 Windows Installation Instructions</a>
+</li></ul>
+</li></ul>
+<li><a name="toc_Library" href="#Library">4 Unit Library</a>
+<li><a name="toc_Utility" href="#Utility">5 Unit Utility</a>
+<li><a name="toc_Database" href="#Database">6 The Units Database</a>
+<li><a name="toc_Support" href="#Support">7 Support for this Package</a>
+<li><a name="toc_Complete-Index" href="#Complete-Index">Index</a>
+</li></ul>
+</div>
+
+
+
+<div class="node">
+<a name="Top"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Introduction">Introduction</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#dir">(dir)</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#dir">(dir)</a>
+
+</div>
+
+<h2 class="unnumbered">UDUNITS-2</h2>
+
+<p>This manual describes the UDUNITS-2 package, which contains
+a C library for units of physical quantities and a unit-definition
+and value-conversion utility.
+
+   <p>Copyright 2014 University Corporation for Atmospheric Research and contributors. 
+All rights reserved.
+
+   <p>This software was developed by the Unidata Program Center of the
+University Corporation for Atmospheric Research (UCAR)
+&lt;http://www.unidata.ucar.edu&gt;.
+
+   <p>Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+   <p>1) Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer. 
+   2) Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution. 
+   3) Neither the names of the development group, the copyright holders, nor the
+      names of contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission. 
+   4) This license shall terminate automatically and you may no longer exercise
+      any of the rights granted to you by this license as of the date you
+      commence an action, including a cross-claim or counterclaim, against
+      the copyright holders or any contributor alleging that this software
+      infringes a patent. This termination provision shall not apply for an
+      action alleging patent infringement by combinations of this software with
+      other software or hardware.
+
+   <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE CONTRIBUTORS
+OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
+
+<ul class="menu">
+<li><a accesskey="1" href="#Introduction">Introduction</a>:         Introduction
+<li><a accesskey="2" href="#Differences">Differences</a>: 		    How this package differs from the UDUNITS-1 package
+<li><a accesskey="3" href="#Installation">Installation</a>:         Installing this package
+<li><a accesskey="4" href="#Library">Library</a>:              The unit library
+<li><a accesskey="5" href="#Utility">Utility</a>:              The unit utility
+<li><a accesskey="6" href="#Database">Database</a>:             The unit database
+<li><a accesskey="7" href="#Support">Support</a>:              Support for this package
+<li><a accesskey="8" href="#Complete-Index">Complete Index</a>:       Complete index
+</ul>
+
+<div class="node">
+<a name="Introduction"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Differences">Differences</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Top">Top</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">1 Introduction</h2>
+
+<p><a name="index-Introduction-1"></a>
+The UDUNITS-2 package provides support for units of physical quantities. 
+Its three main components are: 1) <a href="udunits2lib.html#Top">a C library</a>
+for units of physical quantities;
+2) <a href="udunits2prog.html#Top">a utility</a>;
+for obtaining the definition of a unit and for
+converting numeric values between compatible units;
+and 3) an <a href="#Database">extensive database of units</a>.
+
+<div class="node">
+<a name="Differences"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Installation">Installation</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Introduction">Introduction</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">2 How This Package Differs from the Original <code>UDUNITS</code> Package</h2>
+
+<p>The <code>UDUNIT-2</code> package differs from the <code>UDUNITS-1</code>
+package in the following ways:
+     <ul>
+<li><strong>Support for non-ASCII characters:</strong>
+The <code>UDUNITS-1</code>
+package only supports the ASCII character set.  The <code>UDUNITS-2</code>
+package supports the following character sets: ASCII, ISO 8859-1 (Latin-1),
+and the UTF-8 encoding of ISO 10646 (Unicode).  This means that unit
+string specifications like "<code>µ°F·Ω⁻¹</code>" are now supported (your
+viewer must support UTF-8 to display this string correctly).
+
+     <li><strong>Support for logarithmic units:</strong>  The unit string
+specification "<code>0.1 lg(re 1 mW)</code>" specifies a deciBel unit with a
+one milliwatt reference level. 
+Such units are fully integrated into the package and all meaningful
+operations and conversions are supported.
+
+     <li><strong>Persistent value converters:</strong>
+It is now possible to obtain a <em>converter</em> data-object, which can
+be used to convert numeric values in one unit to numeric values in another,
+compatible unit.  The values can be <code>float</code>, <code>double</code>, or
+one-dimensional arrays of <code>float</code>s or <code>double</code>s.
+
+     <li><strong>Improved API:</strong>  Due to the above changes, it was not
+possible to keep the application programming interface (API) of the
+<code>UDUNITS-1</code> package.  The new interface, however, is easily
+understood and easy to use.  To support backward comptibility,
+the package does contain a version 1 C API, which uses the version 2
+library.
+
+     <li><strong>XML unit database:</strong>  The unit database is encoded using
+human-readable XML rather than a custom format.  The XML
+parser included in the package supports an <em>&lt;import&gt;</em> element to
+allow easy and convenient customization.
+
+     <li><strong>No Fortran or Perl API:</strong>  Interfaces for these languages
+have not yet been created.  Contact
+<a href="mailto:support-udunits@unidata.ucar.edu">support-udunits@unidata.ucar.edu</a> if you are interested in
+helping to create these interfaces.
+
+   </ul>
+
+   <p>One thing that has not changed is that almost all unit string specifications
+understood by the <code>UDUNITS-1</code> package are also
+understood by the <code>UDUNITS-2</code> package.  One exception is
+the symbol <code>g</code>, which in version 1 of the package was associated with
+standard free fall (a unit of accelleration) but which is associated
+with the unit gram in version 2 of the package.
+
+<div class="node">
+<a name="Installation"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Library">Library</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Differences">Differences</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">3 Installing this Package</h2>
+
+<p><a name="index-installation-2"></a>
+
+<ul class="menu">
+<li><a accesskey="1" href="#Binary">Binary</a>:               Installing from a binary distribution
+<li><a accesskey="2" href="#Source">Source</a>:               Installing from a source distribution
+</ul>
+
+<div class="node">
+<a name="Binary"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Source">Source</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Installation">Installation</a>
+
+</div>
+
+<h3 class="section">3.1 Installing from a Binary Distribution</h3>
+
+<p><a name="index-Installation_002c-binary-3"></a>
+
+<h4 class="subsection">3.1.1 64-bit CentOS 6.4</h4>
+
+<p>If your operating system is compatible with 64-bit CentOS 6.4 (e.g., your system
+is 64-bit CentOS, Fedora, or RedHat), then create the file
+<code>/etc/yum.repos.d/unidata.repo</code> with the following contents:
+
+<pre class="example">     [unidata]
+     name=Unidata Repository
+     baseurl=http://www.unidata.ucar.edu/repos/yum/CentOS/6/$basearch
+     enabled=1
+</pre>
+   <p>You should then be able to install this package in the usual manner. 
+For example,
+
+<pre class="example">     su -
+     yum install udunits
+</pre>
+   <h4 class="subsection">3.1.2 32-bit Ubuntu 12</h4>
+
+<p>If your operating system is compatible with 32-bit Ubuntu 12 (precious pangolin)
+(e.g., your system is 32-bit Debian or Ubuntu), then add the following line to
+the file <code>/etc/apt/sources.list</code> or
+<code>/etc/apt/sources.list.d/unidata.list</code>:
+
+<pre class="example">     deb http://www.unidata.ucar.edu/repos/apt i386/
+</pre>
+   <p>You should then be able to install this package in the usual manner. 
+For example,
+
+<pre class="example">     su -
+     apt-get update
+     apt-get install udunits
+</pre>
+   <div class="node">
+<a name="Source"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Binary">Binary</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Installation">Installation</a>
+
+</div>
+
+<h3 class="section">3.2 Installing from a Source Distribution</h3>
+
+<p><a name="index-Installation_002c-source-4"></a>
+
+<ul class="menu">
+<li><a accesskey="1" href="#Prerequisites">Prerequisites</a>:        Prerequisites for this package
+<li><a accesskey="2" href="#Obtain">Obtain</a>:               Obtaining this package
+<li><a accesskey="3" href="#Unix">Unix</a>:                 Installing on Unix-like environments
+<li><a accesskey="4" href="#Windows">Windows</a>:              Installing on Windows environments
+</ul>
+
+<div class="node">
+<a name="Prerequisites"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Obtain">Obtain</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Source">Source</a>
+
+</div>
+
+<h4 class="subsection">3.2.1 Prerequisites for This Package</h4>
+
+<p><a name="index-prerequisites-for-this-package-5"></a>
+The Expat library and header-files must be installed. Look for the library
+"libexpat" and the header-file "expat.h".
+
+   <p>If this package is to be tested (which is optional), then the CUnit library
+and header-files must be installed. Look for the library "libcunit" and the
+header-files "CUnit/CUnit.h" and "CUnit/Basic.h".
+
+   <p>If this package is to be built on a Windows system, then the CMake and MinGW
+packages must be installed. Look for the utility "cmake" and the
+directory/folder "MinGW".
+
+<div class="node">
+<a name="Obtain"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Unix">Unix</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Prerequisites">Prerequisites</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Source">Source</a>
+
+</div>
+
+<h4 class="subsection">3.2.2 Obtaining this Package</h4>
+
+<p><a name="index-obtaining-this-package-6"></a>
+Get the source for this package from its download-page at
+<a href="ftp://ftp.unidata.ucar.edu/pub/udunits/">ftp://ftp.unidata.ucar.edu/pub/udunits/</a>
+and unpack it in an appropriate place. For example,
+
+<pre class="example">     su -
+     cd /usr/local/src
+     wget -O - ftp://ftp.unidata.ucar.edu/pub/udunits/udunits-2.2.20-Source.tar.gz |
+     gunzip -c | pax -r
+</pre>
+   <div class="node">
+<a name="Unix"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Windows">Windows</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Obtain">Obtain</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Source">Source</a>
+
+</div>
+
+<h4 class="subsection">3.2.3 Unix Installation Instructions</h4>
+
+<ul class="menu">
+<li><a accesskey="1" href="#Autoconf">Autoconf</a>:     Autoconf-based installation
+<li><a accesskey="2" href="#CMake">CMake</a>:        CMake-based installation
+</ul>
+
+<div class="node">
+<a name="Autoconf"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#CMake">CMake</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Unix">Unix</a>
+
+</div>
+
+<h5 class="subsubsection">3.2.3.1 Autoconf-based Installation</h5>
+
+<p>Short instructions:
+
+<pre class="example">     ./configure [--prefix=<var>root</var>] [--disable-shared] [CC=<var>path</var>]
+     make
+     make check                      # optional; requires CUNIT installation
+     make install                    # also installs INFO documentation
+     make install-html install-pdf   # optional
+     make clean
+</pre>
+   <p>By default, the installation root is <code>/usr/local</code>.
+
+   <p>Long instructions:
+
+     <ol type=1 start=1>
+<li>Go to the top-level source-directory of this package, e.g.,
+     <pre class="example">          cd udunits-2.2.20
+</pre>
+     <li>If necessary, clean-up from a previous installation attempt by making
+the <code>distclean</code> target using the <var>make</var> utility from step 2:
+     <pre class="example">          <var>make</var> distclean
+</pre>
+     <p>The option <code>--disable-shared</code> causes the build process to create
+a static library only: a sharable library is not created. 
+This option is necessary if the <code>libtool</code> utility that's included
+in this package can't build a sharable library using the given compiler.
+
+     <li>Execute the <code>configure</code> script. 
+Specify the installation prefix, the compiler from the
+previous step, and any required option. 
+For example, if you are on an HP-UX system and want to use
+the <code>/bin/c89</code> compiler and install under <code>/opt</code>,
+then the following command is appropriate:
+
+     <pre class="example">          ./configure --prefix=/opt --disable-shared CC=/bin/c89
+</pre>
+     <p>If the installation prefix is not specified, then the default
+is to install under <code>/usr/local</code>.
+
+     <p>If the compiler isn't specified, then the default is to use
+<code>gcc</code>.
+
+     <li>Build this package by making the default target using the <var>make</var> utility
+from step 2:
+     <pre class="example">          <var>make</var>
+</pre>
+     <li>If you wish to verify that this package works correctly,
+then make the <code>check</code> target using the
+<var>make</var> utility from step 2:
+     <pre class="example">          <var>make</var> check
+</pre>
+     <p>This step is only effective if the <code>configure</code> script found an
+installed <code>CUNIT</code> unit-testing package.  If that package wasn't
+found, then the above command will quickly exit without testing this
+package.
+
+     <li>Install the <a href="udunits2lib.html#Top">library</a>,
+<a href="udunits2prog.html#Top">utility</a>, header-files, units-database, and
+INFO documentation files by making
+the <code>install</code> target using the <var>make</var> utility from
+step 2:
+     <pre class="example">          <var>make</var> install
+</pre>
+     <li>If desired, install the HTML and PDF documentation files by making
+one or more of the following targets
+using the <var>make</var> utility from step 2:
+     <pre class="example">          <var>make</var> install-html install-pdf
+</pre>
+     <li>Clean up by making the <code>clean</code> target using the <var>make</var> utility
+from step 2:
+     <pre class="example">          <var>make</var> clean
+</pre>
+     </ol>
+
+<div class="node">
+<a name="CMake"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Autoconf">Autoconf</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Unix">Unix</a>
+
+</div>
+
+<h5 class="subsubsection">3.2.3.2 CMake-based Installation</h5>
+
+<pre class="example">     cmake
+     make all [test] install [install_test]
+</pre>
+   <p>where the arguments in square brackets are optional.
+
+<div class="node">
+<a name="Windows"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Unix">Unix</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Source">Source</a>
+
+</div>
+
+<h4 class="subsection">3.2.4 Windows Installation Instructions</h4>
+
+<p>Currently, only a 32-bit <a href="http://www.mingw.org">MinGW</a>-based installation is
+supported:
+
+<pre class="example">     cmake -G "MinGW Makefiles"
+     cmake --build . [-DCMAKE_INSTALL_PREFIX=<em>dir</em>] -- all [test] install [install_test]
+</pre>
+   <p>where arguments in square brackets are optional.
+
+   <p>The default installation-prefix is
+"<code>C:\Program Files (x86)\udunits-2.</code><var>minor</var>.<var>bug</var>", where
+<var>minor</var> and <var>bug</var> are the minor version and bug-fix level,
+respectively.
+
+<div class="node">
+<a name="Library"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Utility">Utility</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Installation">Installation</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">4 Unit Library</h2>
+
+<p><a name="index-Library_002c--unit-7"></a>See <a href="udunits2lib.html#UDUNITS-Library">UDUNITS Library</a>, for details on this package's unit library.
+
+<div class="node">
+<a name="Utility"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Database">Database</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Library">Library</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">5 Unit Utility</h2>
+
+<p><a name="index-Utility_002c--unit-8"></a>See <a href="udunits2prog.html#UDUNITS-Utility">UDUNITS Utility</a>, for details on this package's unit
+utility.
+
+<div class="node">
+<a name="Database"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Support">Support</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Utility">Utility</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">6 The Units Database</h2>
+
+<p><a name="index-database-9"></a>
+The database for the UDUNITS-2 package comprises one XML file containing
+unit prefixes and four XML files containing unit definitions:
+
+     <ul>
+<li><a href="../../udunits/udunits2-prefixes.xml">SI unit prefixes</a>
+<li><a href="../../udunits/udunits2-base.xml">SI base units</a>
+<li><a href="../../udunits/udunits2-derived.xml">SI derived units</a>
+<li><a href="../../udunits/udunits2-accepted.xml">Units accepted for use with the SI</a>
+<li><a href="../../udunits/udunits2-common.xml">Non-SI units</a>
+</ul>
+
+<div class="node">
+<a name="Support"></a>
+<p><hr>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Complete-Index">Complete Index</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Database">Database</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="chapter">7 Support for this Package</h2>
+
+<p><a name="index-support-10"></a><a name="index-package_002c-support-11"></a>
+The home-page for this package can be found at
+<a href="http://www.unidata.ucar.edu/software/udunits/">http://www.unidata.ucar.edu/software/udunits/</a>.
+
+   <p>Bug reports should be sent to
+<a href="mailto:support-udunits@unidata.ucar.edu">support-udunits@unidata.ucar.edu</a>.
+
+<div class="node">
+<a name="Complete-Index"></a>
+<p><hr>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Support">Support</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
+
+</div>
+
+<h2 class="unnumbered">Index</h2>
+
+<ul class="index-cp" compact>
+<li><a href="#index-database-9">database</a>: <a href="#Database">Database</a></li>
+<li><a href="#index-installation-2">installation</a>: <a href="#Installation">Installation</a></li>
+<li><a href="#index-Installation_002c-binary-3">Installation, binary</a>: <a href="#Binary">Binary</a></li>
+<li><a href="#index-Installation_002c-source-4">Installation, source</a>: <a href="#Source">Source</a></li>
+<li><a href="#index-Introduction-1">Introduction</a>: <a href="#Introduction">Introduction</a></li>
+<li><a href="#index-Library_002c--unit-7">Library,  unit</a>: <a href="#Library">Library</a></li>
+<li><a href="#index-obtaining-this-package-6">obtaining this package</a>: <a href="#Obtain">Obtain</a></li>
+<li><a href="#index-package_002c-support-11">package, support</a>: <a href="#Support">Support</a></li>
+<li><a href="#index-prerequisites-for-this-package-5">prerequisites for this package</a>: <a href="#Prerequisites">Prerequisites</a></li>
+<li><a href="#index-support-10">support</a>: <a href="#Support">Support</a></li>
+<li><a href="#index-Utility_002c--unit-8">Utility,  unit</a>: <a href="#Utility">Utility</a></li>
+   </ul></body></html>
+
