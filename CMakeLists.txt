@@ -95,7 +95,7 @@ ExternalProject_Add(Cython
                     INSTALL_COMMAND "")
 
 # Build numpy.
-set(NUMPY_BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build -j 4 install --prefix=${CMAKE_INSTALL_PREFIX})
+set(NUMPY_BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build install --prefix=${CMAKE_INSTALL_PREFIX})
 ExternalProject_Add(numpy 
                     DEPENDS Cython
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
