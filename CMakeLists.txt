@@ -8,6 +8,7 @@ project(TECA_3rdparty)
 # NetCDF:        4.4.0
 # UDUnits:       2.2.20
 # Python:        2.7.11
+# Cython:        0.23.4
 # Numpy:         1.10.4
 # Mpi4py:
 # Boost:         1_60_0
@@ -65,9 +66,21 @@ ExternalProject_Add(Python
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
                     CONFIGURE_COMMAND ${PYTHON_CONFIGURE_COMMAND})
 
+# Build Cython.
+set(CYTHON_BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build -j 4 install --prefix=${CMAKE_INSTALL_PREFIX})
+ExternalProject_Add(Cython 
+                    DEPENDS Python
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/Cython
+                    BUILD_IN_SOURCE 1
+                    CONFIGURE_COMMAND ""
+                    BUILD_COMMAND ${CYTHON_BUILD_COMMAND})
+
 # Build numpy.
-set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
+set(NUMPY_BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build -j 4 install --prefix=${CMAKE_INSTALL_PREFIX})
 ExternalProject_Add(numpy 
+                    DEPENDS Cython
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
-                    BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build -j 4 install --prefix=${CMAKE_INSTALL_PREFIX})
+                    BUILD_IN_SOURCE 1
+                    CONFIGURE_COMMAND ""
+                    BUILD_COMMAND ${NUMPY_BUILD_COMMAND})
 
