@@ -8,7 +8,7 @@ project(TECA_3rdparty)
 # NetCDF:        4.4.0
 # UDUnits:       2.2.20
 # Python:        2.7.11
-# Numpy:
+# Numpy:         1.10.4
 # Mpi4py:
 # Boost:         1_60_0
 # Libxlsxwriter: 
@@ -64,4 +64,10 @@ set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${C
 ExternalProject_Add(Python 
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
                     CONFIGURE_COMMAND ${PYTHON_CONFIGURE_COMMAND})
+
+# Build numpy.
+set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
+ExternalProject_Add(numpy 
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
+                    BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build -j 4 install --prefix=${CMAKE_INSTALL_PREFIX})
 
