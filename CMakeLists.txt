@@ -12,7 +12,7 @@ project(TECA_3rdparty)
 # Numpy:         1.10.4
 # Mpi4py:        2.0.0
 # Boost:         1_60_0
-# Libxlsxwriter: 
+# Libxlsxwriter: 0.3.1
 
 option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
 
@@ -37,7 +37,9 @@ endif()
 set(HDF5_CMAKE_COMMAND ${CMAKE_COMMAND} ../hdf5 -Wno-dev 
                        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DHDF5_BUILD_CPP_LIB=OFF)
 if (TECA_HAS_MPI)
-  set(HDF5_CMAKE_COMMAND ${HDF5_CMAKE_COMMAND} -DHDF5_ENABLE_PARALLEL=ON)
+  set(HDF5_CMAKE_COMMAND ${HDF5_CMAKE_COMMAND} -DHDF5_ENABLE_PARALLEL=ON 
+                         -DMPI_C_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicc 
+                         -DMPI_CXX_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicxx)
   ExternalProject_Add(hdf5 
                       DEPENDS mpich
                       SOURCE_DIR ${PROJECT_SOURCE_DIR}/hdf5
@@ -67,12 +69,14 @@ ExternalProject_Add(udunits
 
 # Build Boost.
 set(BOOST_CONFIGURE_COMMAND sh bootstrap.sh --prefix=${CMAKE_INSTALL_PREFIX} --with-libraries=program_options)
+set(BOOST_BUILD_COMMAND ./b2)
+set(BOOST_INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX})
 ExternalProject_Add(boost
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
                     BUILD_IN_SOURCE 1
                     CONFIGURE_COMMAND ${BOOST_CONFIGURE_COMMAND}
-                    BUILD_COMMAND ./b2
-                    INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX})
+                    BUILD_COMMAND ${BOOST_BUILD_COMMAND}
+                    INSTALL_COMMAND ${BOOST_INSTALL_COMMAND})
 
 # Build Python.
 set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
@@ -113,4 +117,15 @@ if (TECA_HAS_MPI)
                       BUILD_COMMAND ${MPI4PY_BUILD_COMMAND}
                       INSTALL_COMMAND ${MPI4PY_INSTALL_COMMAND})
 endif()
+
+# Build libxlsxwriter.
+set(LIBXLSXWRITER_BUILD_COMMAND make)
+file(WRITE ${PROJECT_BINARY_DIR}/install_libxlsxwriter "cp ${PROJECT_SOURCE_DIR}/libxlsxwriter/lib/* ${CMAKE_INSTALL_PREFIX}/lib && cp -R ${PROJECT_SOURCE_DIR}/libxlsxwriter/include/* ${CMAKE_INSTALL_PREFIX}/include")
+set(LIBXLSXWRITER_INSTALL_COMMAND sh ${PROJECT_BINARY_DIR}/install_libxlsxwriter)
+ExternalProject_Add(libxlsxwriter 
+                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/libxlsxwriter
+                    BUILD_IN_SOURCE 1
+                    CONFIGURE_COMMAND ""
+                    BUILD_COMMAND ${LIBXLSXWRITER_BUILD_COMMAND}
+                    INSTALL_COMMAND ${LIBXLSXWRITER_INSTALL_COMMAND})
 
