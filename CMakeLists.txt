@@ -79,7 +79,7 @@ ExternalProject_Add(boost
                     INSTALL_COMMAND ${BOOST_INSTALL_COMMAND})
 
 # Build Python.
-set(PYTHON_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
+set(PYTHON_CONFIGURE_COMMAND env CXX=${CMAKE_CXX_COMPILER} ${PROJECT_SOURCE_DIR}/Python/configure --prefix=${CMAKE_INSTALL_PREFIX})
 ExternalProject_Add(Python 
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
                     CONFIGURE_COMMAND ${PYTHON_CONFIGURE_COMMAND})
