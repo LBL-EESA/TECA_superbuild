@@ -100,13 +100,17 @@ ExternalProject_Add(numpy
                     BUILD_COMMAND ${NUMPY_BUILD_COMMAND}
                     INSTALL_COMMAND "")
 
-# Build mpi4py.
-set(MPI4PY_BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build install --prefix=${CMAKE_INSTALL_PREFIX})
-ExternalProject_Add(mpi4py 
-                    DEPENDS numpy 
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpi4py
-                    BUILD_IN_SOURCE 1
-                    CONFIGURE_COMMAND ""
-                    BUILD_COMMAND ${MPI4PY_BUILD_COMMAND}
-                    INSTALL_COMMAND "")
+
+# Build mpi4py if requested.
+if (TECA_HAS_MPI)
+  set(MPI4PY_BUILD_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build --mpicc=${CMAKE_INSTALL_PREFIX}/bin/mpicc)
+  set(MPI4PY_INSTALL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py install --prefix=${CMAKE_INSTALL_PREFIX})
+  ExternalProject_Add(mpi4py 
+                      DEPENDS mpich numpy 
+                      SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpi4py
+                      BUILD_IN_SOURCE 1
+                      CONFIGURE_COMMAND ""
+                      BUILD_COMMAND ${MPI4PY_BUILD_COMMAND}
+                      INSTALL_COMMAND ${MPI4PY_INSTALL_COMMAND})
+endif()
 
