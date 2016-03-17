@@ -15,6 +15,18 @@ project(TECA_3rdparty)
 # Libxlsxwriter: 0.3.1
 
 option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
+option(TECA_PLATFORM "Specify the platform for which TECA will be built." "generic")
+
+# On Apple machines, we might have to override the default compilers.
+if (APPLE AND ${CMAKE_C_COMPILER} MATCHES "Applications")
+  set(CMAKE_C_COMPILER "/usr/bin/cc")
+endif()
+if (APPLE AND ${CMAKE_C_COMPILER} MATCHES "Applications")
+  set(CMAKE_CXX_COMPILER "/usr/bin/c++")
+endif()
+
+message("-- C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
+message("-- C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
 
 # We need to override the default value of CMAKE_INSTALL_PREFIX.
 if (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
@@ -23,11 +35,34 @@ endif()
 
 message("-- Installing libraries in ${CMAKE_INSTALL_PREFIX}...")
 
+# Sniff out the platform option and set compiler flags.
+if (TECA_PLATFORM STREQUAL "generic")
+  set(CMAKE_BUILD_TYPE "Release")
+  set(CMAKE_C_FLAGS "-O3")
+  set(CMAKE_CXX_FLAGS "-O3")
+elseif (TECA_PLATFORM STREQUAL "generic-debug")
+  set(CMAKE_BUILD_TYPE "Debug")
+  set(CMAKE_C_FLAGS "-O0 -g")
+  set(CMAKE_CXX_FLAGS "-O0 -g")
+elseif(TECA_PLATFORM STREQUAL "sandybridge")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -march=sandybridge -mtune=sandybridge -mavx")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=sandybridge -mtune=sandybridge -mavx")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # Clang's offerings are pretty spare at the moment (maybe?).
+    set(CMAKE_BUILD_TYPE "Release")
+    set(CMAKE_C_FLAGS "-O3")
+    set(CMAKE_CXX_FLAGS "-O3")
+  endif()
+else()
+  message(FATAL_ERROR "Unknown platform: ${TECA_PLATFORM}")
+endif()
+
 include(ExternalProject)
 
 # Build MPICH if MPI is requested.
 if (TECA_HAS_MPI)
-  set(MPICH_CONFIGURE_COMMAND ${PROJECT_SOURCE_DIR}/mpich/configure --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode)
+  set(MPICH_CONFIGURE_COMMAND env CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS} ${PROJECT_SOURCE_DIR}/mpich/configure --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode)
   ExternalProject_Add(mpich 
                       SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpich
                       CONFIGURE_COMMAND ${MPICH_CONFIGURE_COMMAND}
@@ -43,7 +78,9 @@ set(HDF5_CMAKE_COMMAND ${CMAKE_COMMAND} ../hdf5 -Wno-dev
 if (TECA_HAS_MPI)
   set(HDF5_CMAKE_COMMAND ${HDF5_CMAKE_COMMAND} -DHDF5_ENABLE_PARALLEL=ON 
                          -DMPI_C_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicc 
-                         -DMPI_CXX_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicxx)
+                         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                         -DMPI_CXX_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicxx
+                         -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
   ExternalProject_Add(hdf5 
                       DEPENDS mpich
                       SOURCE_DIR ${PROJECT_SOURCE_DIR}/hdf5
@@ -52,6 +89,11 @@ if (TECA_HAS_MPI)
                       LOG_BUILD 1
                       LOG_INSTALL 1)
 else()
+  set(HDF5_CMAKE_COMMAND ${HDF5_CMAKE_COMMAND} 
+                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                         -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
   ExternalProject_Add(hdf5 
                       SOURCE_DIR ${PROJECT_SOURCE_DIR}/hdf5
                       CMAKE_COMMAND ${HDF5_CMAKE_COMMAND}
@@ -64,7 +106,8 @@ endif()
 set(NETCDF_CMAKE_COMMAND ${CMAKE_COMMAND} ../netcdf -Wno-dev 
                          -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DENABLE_NETCDF4=ON 
                          -DENABLE_TESTS=OFF -DBUILD_EXAMPLES=OFF -DNC_HAVE_PARALLEL_HDF5=${TECA_HAS_MPI}
-                         -DHDF5_IS_PARALLEL=${TECA_HAS_MPI})
+                         -DHDF5_IS_PARALLEL=${TECA_HAS_MPI} 
+                         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
 ExternalProject_Add(netcdf 
                     DEPENDS hdf5
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/netcdf
@@ -75,7 +118,11 @@ ExternalProject_Add(netcdf
 
 # Build UDUnits.
 set(UDUNITS_CMAKE_COMMAND ${CMAKE_COMMAND} ../udunits -Wno-dev 
-                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX})
+                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                         -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                         -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS})
 ExternalProject_Add(udunits 
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/udunits
                     CMAKE_COMMAND ${UDUNITS_CMAKE_COMMAND}
