@@ -1,0 +1,3 @@
+[submodule "TECA"]
+	path = TECA
+	url = git@github-work:LBL-EESA/TECA.git
