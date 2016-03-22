@@ -1,0 +1,12 @@
+*.o
+*.a
+*.lo
+*.mod
+*.deps
+*.dirstamp
+*.pyc
+*.pyo
+
+*.swp
+*.swo
+*~
