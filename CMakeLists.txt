@@ -16,14 +16,6 @@ project(TECA_3rdparty)
 
 option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
 
-# On Apple machines, we might have to override the default compilers.
-if (APPLE AND ${CMAKE_C_COMPILER} MATCHES "Applications")
-  set(CMAKE_C_COMPILER "/usr/bin/cc")
-endif()
-if (APPLE AND ${CMAKE_C_COMPILER} MATCHES "Applications")
-  set(CMAKE_CXX_COMPILER "/usr/bin/c++")
-endif()
-
 message("-- C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
 message("-- C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
 
