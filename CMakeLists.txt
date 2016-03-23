@@ -133,7 +133,11 @@ ExternalProject_Add(udunits
                     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
 # Build Boost.
-# TODO -- tell boost which compilker to use
+if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(BOOST_B2_FLAGS toolset=clang cxxflags='-stdlib=libc++' linkflag='-stdlib=libc++')
+else()
+  set(BOOST_B2_FLAGS cxxflags='-std=c++11')
+endif()
 ExternalProject_Add(boost
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
                     BUILD_IN_SOURCE 1
@@ -141,7 +145,7 @@ ExternalProject_Add(boost
                         ./bootstrap.sh --prefix=${CMAKE_INSTALL_PREFIX}
                         -with-libraries=program_options "cxxflags=${cxx_flags}"
                         "cflags=${c_flags}"
-                    BUILD_COMMAND ./b2
+                    BUILD_COMMAND ./b2 ${BOOST_B2_FLAGS}
                     INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
                     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
