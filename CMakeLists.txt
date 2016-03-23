@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(TECA_3rdparty)
+include(ExternalProject)
 
 # The following versions of each library are installed by this script:
 # MPICH:         3.2
@@ -16,15 +17,14 @@ project(TECA_3rdparty)
 
 option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
 
-message("-- C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
-message("-- C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
+message(STATUS "C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
+message(STATUS "C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
 
 # We need to override the default value of CMAKE_INSTALL_PREFIX.
 if (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
-  set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR})
+  set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR} CACHE PATH "" FORCE)
 endif()
-
-message("-- Installing libraries in ${CMAKE_INSTALL_PREFIX}...")
+message(STATUS "Installing libraries in ${CMAKE_INSTALL_PREFIX}...")
 
 # if we forgot to set the build type default to release
 if (NOT CMAKE_BUILD_TYPE)
@@ -32,6 +32,7 @@ if (NOT CMAKE_BUILD_TYPE)
       CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
+message(STATUS "Configuring a ${CMAKE_BUILD_TYPE} build")
 
 # Sniff out the platform option and set compiler flags.
 set (TECA_PLATFORM "generic" CACHE STRING "Select from a set of pre-defined compiler flags")
@@ -48,6 +49,7 @@ elseif(TECA_PLATFORM STREQUAL "sandybridge")
 else()
   message(FATAL_ERROR "Unknown platform: ${TECA_PLATFORM}")
 endif()
+message(STATUS "Configuring for ${TECA_PLATFORM} platform")
 
 # collect flags to pass them into autotools scripts
 set(c_flags)
@@ -61,18 +63,34 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
   message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
 endif()
+message(STATUS "Compiling with CFLAGS=${c_flags}")
+message(STATUS "Compiling with CXXFLAGS=${cxx_flags}")
 
-include(ExternalProject)
+# set the build enviornment for autotools builds and Python builds
+# this ensures that python-config works as expected and prevents
+# external Python installs from mixing in. this is also the environment
+# that should be used at run-time.
+set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}"
+    LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{LD_LIBRARY_PATH}
+    DYLD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{DYLD_LIBRARY_PATH}
+    PKG_CONFIG_PATH=${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig:$ENV{PKG_CONFIG_PATH}
+    PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/
+    PATH=${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH})
+
+# configure a bash script that will let us reproduce
+# the build enviornment at run-time
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/teca_env.sh.in
+    ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # Build MPICH if MPI is requested.
 if (TECA_HAS_MPI)
   ExternalProject_Add(mpich
                       SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpich
-                      CONFIGURE_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-                          "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" ${PROJECT_SOURCE_DIR}/mpich/configure
+                      CONFIGURE_COMMAND env ${ENV} ${PROJECT_SOURCE_DIR}/mpich/configure
                           --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
-                      BUILD_IN_SOURCE 1
-                      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+                      BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 endif()
 
 # Build the HDF5 parallel I/O library.
@@ -133,71 +151,62 @@ ExternalProject_Add(udunits
                     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
 # Build Boost.
-if (APPLE AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set(BOOST_B2_FLAGS toolset=clang cxxflags='-stdlib=libc++' linkflag='-stdlib=libc++')
-else()
-  set(BOOST_B2_FLAGS cxxflags='-std=c++11')
+if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
+    (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
+  set(boost_toolset toolset=clang)
+  set(boost_cxx_flags -stdlib=libc++)
+  set(boost_ld_flags linkflags=-stdlib=libc++)
 endif()
 ExternalProject_Add(boost
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
-                    BUILD_IN_SOURCE 1
-                    CONFIGURE_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+                    CONFIGURE_COMMAND env ${env}
                         ./bootstrap.sh --prefix=${CMAKE_INSTALL_PREFIX}
-                        -with-libraries=program_options "cxxflags=${cxx_flags}"
-                        "cflags=${c_flags}"
-                    BUILD_COMMAND ./b2 ${BOOST_B2_FLAGS}
+                        -with-libraries=program_options 
+                    BUILD_COMMAND ./b2 ${boost_toolset}
+                        "cxxflags=${cxx_flags} -std=c++11 ${boost_cxx_flags}" "${boost_ld_flags}"
                     INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
-                    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+                    BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
 # Build Python.
 ExternalProject_Add(Python
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
-                    CONFIGURE_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-                        "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}"
-                        ${PROJECT_SOURCE_DIR}/Python/configure --enable-shared
-                        "--prefix=${CMAKE_INSTALL_PREFIX}"
+                    CONFIGURE_COMMAND env ${env} ${PROJECT_SOURCE_DIR}/Python/configure
+                        --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
                     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
 # Build Cython.
 ExternalProject_Add(Cython
                     DEPENDS Python
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/Cython
-                    BUILD_IN_SOURCE 1
                     CONFIGURE_COMMAND ""
-                    BUILD_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-                        "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}"
-                        ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build install
-                        --prefix=${CMAKE_INSTALL_PREFIX}
+                    BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                         setup.py build install --prefix=${CMAKE_INSTALL_PREFIX}
                     INSTALL_COMMAND ""
-                    LOG_BUILD 1)
+                    BUILD_IN_SOURCE 1 LOG_BUILD 1)
 
 # Build numpy.
 ExternalProject_Add(numpy
                     DEPENDS Cython
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
-                    BUILD_IN_SOURCE 1
                     CONFIGURE_COMMAND ""
-                    BUILD_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-                        "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}"
-                        ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build install
-                        "--prefix=${CMAKE_INSTALL_PREFIX}"
+                    BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                        setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
                     INSTALL_COMMAND ""
-                    LOG_BUILD 1)
+                    BUILD_IN_SOURCE 1 LOG_BUILD 1)
 
 # Build mpi4py if requested.
 if (TECA_HAS_MPI)
   ExternalProject_Add(mpi4py
                       DEPENDS mpich numpy
                       SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpi4py
-                      BUILD_IN_SOURCE 1
                       CONFIGURE_COMMAND ""
-                      BUILD_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-                           "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}"
+                      BUILD_COMMAND env ${env}
                           ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build
                           --mpicc=${CMAKE_INSTALL_PREFIX}/bin/mpicc
-                      INSTALL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin/python setup.py
+                      INSTALL_COMMAND env ${env}
+                          ${CMAKE_INSTALL_PREFIX}/bin/python setup.py
                           install --prefix=${CMAKE_INSTALL_PREFIX}
-                      LOG_BUILD 1 LOG_INSTALL 1)
+                      BUILD_IN_SOURCE 1 LOG_BUILD 1 LOG_INSTALL 1)
 endif()
 
 # Build libxlsxwriter.
@@ -218,8 +227,7 @@ ExternalProject_Add(libxlsxwriter
                     DEPENDS udunits # For creating directories in prefix.
                     SOURCE_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
                     CONFIGURE_COMMAND ""
-                    BUILD_COMMAND env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-                          CFLAGS=${c_flags} CXXFLAGS=${cxx_flags} make install
+                    BUILD_COMMAND env ${env} make install
                     BINARY_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
                     INSTALL_COMMAND ""
                     LOG_BUILD 1 LOG_INSTALL 1)
