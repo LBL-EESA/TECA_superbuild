@@ -18,3 +18,5 @@ netcdf/**
 numpy/**
 Python/**
 udunits/**
+mpich/src/openpa/Makefile.in
+netcdf/include/netcdf_meta.h
