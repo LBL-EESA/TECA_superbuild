@@ -13,9 +13,9 @@ $ make -j <number of build threads>
 $ make -j <number of build threads> install
 ```
 
-When using programs built against this install source the following
-configuration file. This ensures that the install takes porecedence
-over any conflictiing installs that may be present on your system
+When using programs built against this install, source the following
+configuration file. This ensures that the install takes precedence
+over any conflicting installs that may be present on your system.
 
 ```bash
 $ . <prefix>/bin/teca_env.sh

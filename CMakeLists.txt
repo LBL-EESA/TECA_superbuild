@@ -24,6 +24,12 @@ option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
 message(STATUS "C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
 message(STATUS "C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
 
+# Make sure this system has swig on it.
+find_program(swig_exe swig)
+if (swig_exe STREQUAL "swig-NOTFOUND")
+  message(FATAL_ERROR "swig must be installed to build TECA binaries.")
+endif()
+
 # We need to override the default value of CMAKE_INSTALL_PREFIX.
 if (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
   set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR} CACHE PATH "" FORCE)
@@ -240,7 +246,7 @@ ExternalProject_Add(libxlsxwriter
 #                            TECA proper
 #---------------------------------------------------------------------------
 
-set(TECA_CMAKE_COMMAND ${CMAKE_COMMAND} ../TECA -Wno-dev 
+set(teca_cmake_command ${CMAKE_COMMAND} ../TECA -Wno-dev 
                        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} 
                        -DMPI_C_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicc
                        -DMPI_CXX_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicxx
@@ -253,11 +259,15 @@ set(TECA_CMAKE_COMMAND ${CMAKE_COMMAND} ../TECA -Wno-dev
                        -DLIBXLSWRITER_LIBRARY=${CMAKE_INSTALL_PREFIX}/lib/libnetcdf${CMAKE_SHARED_LIBRARY_SUFFIX}
                        -DBoost_INCLUDE_DIRS=${CMAKE_INSTALL_PREFIX}/include
                        -DBoost_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib
-                       -DTECA_HAS_VTK=OFF)
-                       
+                       -DTECA_HAS_VTK=OFF
+                       -DTECA_HAS_PYTHON=ON)
+set(teca_deps netcdf Python boost libxlsxwriter udunits)
+if (TECA_HAS_MPI)
+  set(teca_deps ${teca_deps} mpi4py)
+endif()
 ExternalProject_Add(TECA 
-                    DEPENDS netcdf Python boost libxlsxwriter udunits
+                    DEPENDS ${teca_deps}
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/TECA
-                    CMAKE_COMMAND ${TECA_CMAKE_COMMAND}
+                    CMAKE_COMMAND ${teca_cmake_command}
                     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
