@@ -246,28 +246,23 @@ ExternalProject_Add(libxlsxwriter
 #                            TECA proper
 #---------------------------------------------------------------------------
 
-set(teca_cmake_command ${CMAKE_COMMAND} ../TECA -Wno-dev 
-                       -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} 
-                       -DMPI_C_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicc
-                       -DMPI_CXX_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicxx
-                       -DMPI_Fortran_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpif90
-                       -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS} 
-                       -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
-                       -DNETCDF_INCLUDE_DIR=${CMAKE_INSTALL_PREFIX}/include
-                       -DNETCDF_LIBRARY=${CMAKE_INSTALL_PREFIX}/lib/libnetcdf${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       -DLIBXLSWRITER_INCLUDE_DIR=${CMAKE_INSTALL_PREFIX}/include
-                       -DLIBXLSWRITER_LIBRARY=${CMAKE_INSTALL_PREFIX}/lib/libnetcdf${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       -DBoost_INCLUDE_DIRS=${CMAKE_INSTALL_PREFIX}/include
-                       -DBoost_LIBRARY_DIRS=${CMAKE_INSTALL_PREFIX}/lib
-                       -DTECA_HAS_VTK=OFF
-                       -DTECA_HAS_PYTHON=ON)
+set(teca_cmake_command env ${env} ${CMAKE_COMMAND} ../TECA -Wno-dev
+                       -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                       "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+                       "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
+                       "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
+                       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                       "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+                       "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+                       "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+                       -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                       -DTECA_HAS_VTK=OFF)
 set(teca_deps netcdf Python boost libxlsxwriter udunits)
 if (TECA_HAS_MPI)
   set(teca_deps ${teca_deps} mpi4py)
 endif()
-ExternalProject_Add(TECA 
+ExternalProject_Add(TECA
                     DEPENDS ${teca_deps}
                     SOURCE_DIR ${PROJECT_SOURCE_DIR}/TECA
                     CMAKE_COMMAND ${teca_cmake_command}
                     LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
