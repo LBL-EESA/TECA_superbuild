@@ -39,27 +39,49 @@ message(STATUS "Installing libraries in ${CMAKE_INSTALL_PREFIX}...")
 # if we forgot to set the build type default to release
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release"
-      CACHE STRING "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+      CACHE STRING "options are: Debug Release RelWithDebInfo MinSizeRel."
+      FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+      "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 message(STATUS "Configuring a ${CMAKE_BUILD_TYPE} build")
 
 # Sniff out the platform option and set compiler flags.
-set (TECA_PLATFORM "generic" CACHE STRING "Select from a set of pre-defined compiler flags")
-if (TECA_PLATFORM STREQUAL "generic")
+# default to native, which gives the best performance
+# but is not portable. use generic for max protability.
+# sandybridge should be very portible, covering processors
+# released 2011 or later.
+set (TARGET_PLATFORM "native" CACHE STRING
+    "Select from a set of pre-defined compiler flags")
+set_property(CACHE TARGET_PLATFORM PROPERTY STRINGS
+    "generic" "native" "sandybridge")
+
+if (TARGET_PLATFORM STREQUAL "generic")
   # go with the defaults specified by the build type
-elseif(TECA_PLATFORM STREQUAL "sandybridge")
+elseif(TARGET_PLATFORM STREQUAL "native")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_C_FLAGS_RELEASE "-O3 -march=sandybridge -mtune=sandybridge -mavx -DNDEBUG" CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=sandybridge -mtune=sandybridge -mavx -DNDEBUG" CACHE STRING "" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+        CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+        CACHE STRING "" FORCE)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # Clang's offerings are pretty spare at the moment (maybe?).
+    # go with the defaults
+  endif()
+elseif(TARGET_PLATFORM STREQUAL "sandybridge")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(CMAKE_C_FLAGS_RELEASE "-O3 -march=sandybridge -mtune=sandybridge -mavx -DNDEBUG"
+        CACHE STRING "" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=sandybridge -mtune=sandybridge -mavx -DNDEBUG"
+        CACHE STRING "" FORCE)
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     # Clang's offerings are pretty spare at the moment (maybe?).
     # go with the defaults
   endif()
 else()
-  message(FATAL_ERROR "Unknown platform: ${TECA_PLATFORM}")
+  message(FATAL_ERROR "Unknown platform: ${TARGET_PLATFORM}")
 endif()
-message(STATUS "Configuring for ${TECA_PLATFORM} platform")
+message(STATUS "Configuring for ${TARGET_PLATFORM} platform")
 
 # collect flags to pass them into autotools scripts
 set(c_flags)
