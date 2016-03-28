@@ -3,10 +3,6 @@ cmake_minimum_required(VERSION 3.0)
 project(TECA_3rdparty)
 include(ExternalProject)
 
-#---------------------------------------------------------------------------
-#                           Third-party libraries
-#---------------------------------------------------------------------------
-
 # The following versions of each library are installed by this script:
 # MPICH:         3.2
 # HDF5:          1.8.16
@@ -19,22 +15,23 @@ include(ExternalProject)
 # Boost:         1_60_0
 # Libxlsxwriter: 0.3.1
 
-option(TECA_HAS_MPI "Build parallel libraries for TECA" ON)
+# enable/disable each piece, all on by default
+option(ENABLE_BOOST "Install Boost" ON)
+option(ENABLE_LIBXLSXWRITER "Install libxlsxwriter" ON)
+option(ENABLE_MPI "Install MPI group" ON)
+option(ENABLE_NETCDF "Install NetCDF group" ON)
+option(ENABLE_PYTHON "Install Python group" ON)
+option(ENABLE_TECA "Install TECA" ON)
+option(ENABLE_UDUNITS "Install UDUNITS" ON)
 
 message(STATUS "C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
 message(STATUS "C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
-
-# Make sure this system has swig on it.
-find_program(swig_exe swig)
-if (swig_exe STREQUAL "swig-NOTFOUND")
-  message(FATAL_ERROR "swig must be installed to build TECA binaries.")
-endif()
 
 # We need to override the default value of CMAKE_INSTALL_PREFIX.
 if (CMAKE_INSTALL_PREFIX STREQUAL "/usr/local")
   set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR} CACHE PATH "" FORCE)
 endif()
-message(STATUS "Installing libraries in ${CMAKE_INSTALL_PREFIX}...")
+message(STATUS "Installing libraries in ${CMAKE_INSTALL_PREFIX}")
 
 # if we forgot to set the build type default to release
 if (NOT CMAKE_BUILD_TYPE)
@@ -117,174 +114,186 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # Build MPICH if MPI is requested.
-if (TECA_HAS_MPI)
+if (ENABLE_MPI)
   ExternalProject_Add(mpich
-                      SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpich
-                      CONFIGURE_COMMAND env ${ENV} ${PROJECT_SOURCE_DIR}/mpich/configure
-                          --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
-                      BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpich
+      CONFIGURE_COMMAND env ${ENV} ${PROJECT_SOURCE_DIR}/mpich/configure
+          --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
+      BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 endif()
 
-# Build the HDF5 parallel I/O library.
-ExternalProject_Add(hdf5
-                    DEPENDS mpich
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/hdf5
-                    CMAKE_COMMAND ${CMAKE_COMMAND} ../hdf5 -Wno-dev
-                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                         "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-                         "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
-                         "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
-                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                         "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-                         "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-                         "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-                         -DMPI_C_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicc
-                         -DMPI_CXX_COMPILER=${CMAKE_INSTALL_PREFIX}/bin/mpicxx
-                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                         -DHDF5_ENABLE_PARALLEL=${TECA_HAS_MPI}
-                         -DHDF5_BUILD_CPP_LIB=OFF
-                    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+# NetCDF group
+if (ENABLE_NETCDF)
+  # Build the HDF5 parallel I/O library.
+  if (ENABLE_MPI)
+    set(hdf5_deps mpich)
+  endif()
+  ExternalProject_Add(hdf5
+      DEPENDS ${hdf5_deps}
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/hdf5
+      CMAKE_COMMAND ${CMAKE_COMMAND} ../hdf5
+           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+           "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+           "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+           "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+           "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+           "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+           "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+           -DHDF5_ENABLE_PARALLEL=${ENABLE_MPI}
+           -DHDF5_BUILD_CPP_LIB=OFF
+      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-# Build NetCDF.
-ExternalProject_Add(netcdf
-                    DEPENDS hdf5
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/netcdf
-                    CMAKE_COMMAND ${CMAKE_COMMAND} ../netcdf -Wno-dev
-                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                         "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-                         "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
-                         "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
-                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                         "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-                         "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-                         "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                         -DENABLE_NETCDF4=ON -DENABLE_TESTS=OFF -DBUILD_EXAMPLES=OFF
-                         -DNC_HAVE_PARALLEL_HDF5=${TECA_HAS_MPI}
-                         -DHDF5_IS_PARALLEL=${TECA_HAS_MPI}
-                    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+  # Build NetCDF.
+  ExternalProject_Add(netcdf
+      DEPENDS hdf5
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/netcdf
+      CMAKE_COMMAND ${CMAKE_COMMAND} ../netcdf
+           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+           "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+           "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
+           "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
+           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+           "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+           "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+           "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+           -DENABLE_NETCDF4=ON -DENABLE_TESTS=OFF -DBUILD_EXAMPLES=OFF
+           -DNC_HAVE_PARALLEL_HDF5=${ENABLE_MPI}
+           -DHDF5_IS_PARALLEL=${ENABLE_MPI}
+      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+endif()
 
 # Build UDUnits.
-ExternalProject_Add(udunits
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/udunits
-                    CMAKE_COMMAND ${CMAKE_COMMAND} ../udunits -Wno-dev
-                         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                         "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-                         "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
-                         "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
-                         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                         "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-                         "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-                         "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-                         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+if (ENABLE_UDUNITS)
+  ExternalProject_Add(udunits
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/udunits
+      CMAKE_COMMAND ${CMAKE_COMMAND} ../udunits
+           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+           "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+           "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+           "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+           "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+           "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+           "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+endif()
 
 # Build Boost.
-if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
-    (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
-  set(boost_toolset toolset=clang)
-  set(boost_cxx_flags -stdlib=libc++)
-  set(boost_ld_flags linkflags=-stdlib=libc++)
+if (ENABLE_BOOST)
+  if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
+      (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
+    set(boost_toolset toolset=clang)
+    set(boost_cxx_flags -stdlib=libc++)
+    set(boost_ld_flags linkflags=-stdlib=libc++)
+  endif()
+  ExternalProject_Add(boost
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
+      CONFIGURE_COMMAND env ${env}
+          ./bootstrap.sh --prefix=${CMAKE_INSTALL_PREFIX}
+          -with-libraries=program_options
+      BUILD_COMMAND ./b2 ${boost_toolset}
+          "cxxflags=${cxx_flags} -std=c++11 ${boost_cxx_flags}" "${boost_ld_flags}"
+      INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
+      BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 endif()
-ExternalProject_Add(boost
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/boost
-                    CONFIGURE_COMMAND env ${env}
-                        ./bootstrap.sh --prefix=${CMAKE_INSTALL_PREFIX}
-                        -with-libraries=program_options 
-                    BUILD_COMMAND ./b2 ${boost_toolset}
-                        "cxxflags=${cxx_flags} -std=c++11 ${boost_cxx_flags}" "${boost_ld_flags}"
-                    INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
-                    BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-# Build Python.
-ExternalProject_Add(Python
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
-                    CONFIGURE_COMMAND env ${env} ${PROJECT_SOURCE_DIR}/Python/configure
-                        --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
-                    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+# Python group
+if (ENABLE_PYTHON)
+  # Build Python.
+  ExternalProject_Add(Python
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
+      CONFIGURE_COMMAND env ${env} ${PROJECT_SOURCE_DIR}/Python/configure
+          --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
+      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-# Build Cython.
-ExternalProject_Add(Cython
-                    DEPENDS Python
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/Cython
-                    CONFIGURE_COMMAND ""
-                    BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-                         setup.py build install --prefix=${CMAKE_INSTALL_PREFIX}
-                    INSTALL_COMMAND ""
-                    BUILD_IN_SOURCE 1 LOG_BUILD 1)
+  # Build Cython.
+  ExternalProject_Add(Cython
+      DEPENDS Python
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/Cython
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+           setup.py build install --prefix=${CMAKE_INSTALL_PREFIX}
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1 LOG_BUILD 1)
 
-# Build numpy.
-ExternalProject_Add(numpy
-                    DEPENDS Cython
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
-                    CONFIGURE_COMMAND ""
-                    BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-                        setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-                    INSTALL_COMMAND ""
-                    BUILD_IN_SOURCE 1 LOG_BUILD 1)
+  # Build numpy.
+  ExternalProject_Add(numpy
+      DEPENDS Cython
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+          setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1 LOG_BUILD 1)
 
-# Build mpi4py if requested.
-if (TECA_HAS_MPI)
-  ExternalProject_Add(mpi4py
-                      DEPENDS mpich numpy
-                      SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpi4py
-                      CONFIGURE_COMMAND ""
-                      BUILD_COMMAND env ${env}
-                          ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build
-                          --mpicc=${CMAKE_INSTALL_PREFIX}/bin/mpicc
-                      INSTALL_COMMAND env ${env}
-                          ${CMAKE_INSTALL_PREFIX}/bin/python setup.py
-                          install --prefix=${CMAKE_INSTALL_PREFIX}
-                      BUILD_IN_SOURCE 1 LOG_BUILD 1 LOG_INSTALL 1)
+  # Build mpi4py if requested.
+  if (ENABLE_MPI)
+    ExternalProject_Add(mpi4py
+        DEPENDS mpich numpy
+        SOURCE_DIR ${PROJECT_SOURCE_DIR}/mpi4py
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND env ${env}
+            ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build
+            --mpicc=${CMAKE_INSTALL_PREFIX}/bin/mpicc
+        INSTALL_COMMAND env ${env}
+            ${CMAKE_INSTALL_PREFIX}/bin/python setup.py
+            install --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_BUILD 1 LOG_INSTALL 1)
+  endif()
 endif()
 
 # Build libxlsxwriter.
+if (ENABLE_LIBXLSXWRITER)
+  # First copy the source files to a new location.
+  execute_process(COMMAND cmake -E copy_directory ${PROJECT_SOURCE_DIR}/libxlsxwriter
+        ${PROJECT_BINARY_DIR}/libxlsxwriter RESULT_VARIABLE stat)
 
-# First copy the source files to a new location.
-execute_process(COMMAND cmake -E copy_directory ${PROJECT_SOURCE_DIR}/libxlsxwriter ${PROJECT_BINARY_DIR}/libxlsxwriter
-                RESULT_VARIABLE stat)
+  # Now tweak the Makefile to install files in the right spot.
+  file(READ ${PROJECT_SOURCE_DIR}/libxlsxwriter/Makefile xlsx_makefile)
+  string(REPLACE "install:" "install: all" xlsx_makefile ${xlsx_makefile})
+  string(REPLACE "cp -r include/* /usr/include" "cp -R include/* ${CMAKE_INSTALL_PREFIX}/include"
+        xlsx_makefile ${xlsx_makefile})
+  string(REPLACE "cp lib/* /usr/lib" "cp lib/* ${CMAKE_INSTALL_PREFIX}/lib"
+        xlsx_makefile ${xlsx_makefile})
+  file(WRITE ${PROJECT_BINARY_DIR}/libxlsxwriter/Makefile ${xlsx_makefile})
 
-# Now tweak the Makefile to install files in the right spot.
-file(READ ${PROJECT_SOURCE_DIR}/libxlsxwriter/Makefile xlsx_makefile)
-string(REPLACE "install:" "install: all" xlsx_makefile ${xlsx_makefile})
-string(REPLACE "cp -r include/* /usr/include" "cp -R include/* ${CMAKE_INSTALL_PREFIX}/include" xlsx_makefile ${xlsx_makefile})
-string(REPLACE "cp lib/* /usr/lib" "cp lib/* ${CMAKE_INSTALL_PREFIX}/lib" xlsx_makefile ${xlsx_makefile})
-file(WRITE ${PROJECT_BINARY_DIR}/libxlsxwriter/Makefile ${xlsx_makefile})
-
-# Finally, build the thing.
-ExternalProject_Add(libxlsxwriter
-                    DEPENDS udunits # For creating directories in prefix.
-                    SOURCE_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
-                    CONFIGURE_COMMAND ""
-                    BUILD_COMMAND env ${env} make install
-                    BINARY_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
-                    INSTALL_COMMAND ""
-                    LOG_BUILD 1 LOG_INSTALL 1)
-
-#---------------------------------------------------------------------------
-#                            TECA proper
-#---------------------------------------------------------------------------
-
-set(teca_cmake_command env ${env} ${CMAKE_COMMAND} ../TECA -Wno-dev
-                       -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                       "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-                       "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
-                       "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
-                       -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                       "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-                       "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-                       "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-                       -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                       -DTECA_HAS_VTK=OFF)
-set(teca_deps netcdf Python boost libxlsxwriter udunits)
-if (TECA_HAS_MPI)
-  set(teca_deps ${teca_deps} mpi4py)
+  # Finally, build the thing.
+  ExternalProject_Add(libxlsxwriter
+      DEPENDS udunits # For creating directories in prefix.
+      SOURCE_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND env ${env} make install
+      BINARY_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
+      INSTALL_COMMAND ""
+      LOG_BUILD 1 LOG_INSTALL 1)
 endif()
-ExternalProject_Add(TECA
-                    DEPENDS ${teca_deps}
-                    SOURCE_DIR ${PROJECT_SOURCE_DIR}/TECA
-                    CMAKE_COMMAND ${teca_cmake_command}
-                    LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
+# TECA proper
+if (ENABLE_TECA)
+  set(teca_deps netcdf Python boost libxlsxwriter udunits)
+  if (ENABLE_MPI)
+    list(APPEND teca_deps mpi4py)
+  endif()
+  ExternalProject_Add(TECA
+      DEPENDS ${teca_deps}
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/TECA
+      CMAKE_COMMAND env ${env} ${CMAKE_COMMAND} ../TECA
+         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+         "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+         "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
+         "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
+         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+         "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+         "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+         "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+         -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+         -DTECA_HAS_VTK=OFF
+      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+endif()
