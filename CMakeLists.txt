@@ -9,6 +9,7 @@ include(ExternalProject)
 # NetCDF:        4.4.0
 # UDUnits:       2.2.20
 # Python:        2.7.11
+# swig:          3.0.8
 # Cython:        0.23.4
 # Numpy:         1.10.4
 # Mpi4py:        2.0.0
@@ -211,6 +212,14 @@ if (ENABLE_PYTHON)
       SOURCE_DIR ${PROJECT_SOURCE_DIR}/Python
       CONFIGURE_COMMAND env ${env} ${PROJECT_SOURCE_DIR}/Python/configure
           --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
+      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
+  # Build Swig.
+  ExternalProject_Add(swig
+      DEPENDS Python
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/swig
+      CONFIGURE_COMMAND env ${env} ${PROJECT_SOURCE_DIR}/swig/configure
+          --with-python=${CMAKE_INSTALL_PREFIX}/bin/python --prefix=${CMAKE_INSTALL_PREFIX}
       LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
   # Build Cython.
