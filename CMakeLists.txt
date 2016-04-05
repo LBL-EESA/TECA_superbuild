@@ -306,3 +306,27 @@ if (ENABLE_TECA)
          -DTECA_HAS_VTK=OFF
       LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 endif()
+
+#--------------------------------------------------------------
+#                       Binary packaging
+#--------------------------------------------------------------
+
+# Metadata.
+set(CPACK_PACKAGE_NAME "TECA")
+set(CPACK_PACKAGE_VENDOR "cascade.lbl.gov")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "TECA - A parallel toolkit for extreme climate analysis")
+set(CPACK_PACKAGE_VERSION_MAJOR "2")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "TECA")
+
+# Installation targets -- we are really only concerned with executables.
+install(FILES ${CMAKE_INSTALL_PREFIX}/bin/teca_ar_detect
+        DESTINATION bin
+        COMPONENT Detectors)
+set(CPACK_COMPONENT_DETECTORS_DISPLAY_NAME "Detectors")
+set(CPACK_COMPONENT_DETECTORS_DESCRIPTION "TECA detection algorithms")
+
+# This line always comes last.
+include(CPack)
