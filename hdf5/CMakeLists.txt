@@ -582,7 +582,7 @@ endif (NOT HDF5_EXTERNALLY_CONFIGURED)
 # Note: Currently CMake only allows configuring of threadsafe on
 # non-Cygwin WINDOWS.
 #-----------------------------------------------------------------------------
-if (WIN32)
+#if (WIN32)
   option (HDF5_ENABLE_THREADSAFE "Enable thread-safety" OFF)
   if (HDF5_ENABLE_THREADSAFE)
     # check for unsupported options
@@ -625,7 +625,7 @@ if (WIN32)
       endif (NOT H5_HAVE_PTHREAD_H)
     endif (H5_HAVE_IOEO)
   endif (HDF5_ENABLE_THREADSAFE)
-endif (WIN32)
+#endif (WIN32)
 
 #-----------------------------------------------------------------------------
 # Add the HDF5 Library Target to the build
