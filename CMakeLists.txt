@@ -126,28 +126,17 @@ endif()
 # NetCDF group
 if (ENABLE_NETCDF)
   # Build the HDF5 parallel I/O library.
+  set(HDF5_CONFIG_FLAGS --enable-unsupported  --enable-hl --enable-threadsafe --enable-production)
   if (ENABLE_MPI)
     set(hdf5_deps mpich)
+    list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
   endif()
   ExternalProject_Add(hdf5
       DEPENDS ${hdf5_deps}
       SOURCE_DIR ${PROJECT_SOURCE_DIR}/hdf5
-      CMAKE_COMMAND ${CMAKE_COMMAND} ../hdf5
-           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-           "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-           "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
-           "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
-           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-           "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-           "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-           "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-           -DHDF5_ENABLE_PARALLEL=${ENABLE_MPI}
-           -DHDF5_ENABLE_THREADSAFE=ON -DHDF5_ENABLE_UNSUPPORTED=ON
-           -DALLOW_UNSUPPORTED=ON -DHDF5_BUILD_HL_LIB=ON
-           -DHDF5_BUILD_CPP_LIB=OFF -DBUILD_TESTING=OFF
-      LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+      CONFIGURE_COMMAND env ${ENV} ${PROJECT_SOURCE_DIR}/hdf5/configure
+          --prefix=${CMAKE_INSTALL_PREFIX} ${HDF5_CONFIG_FLAGS}
+      BUILD_IN_SOURCE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
   # Build NetCDF.
   ExternalProject_Add(netcdf
