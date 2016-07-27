@@ -4,11 +4,12 @@ project(TECA_3rdparty)
 include(ExternalProject)
 
 # this web server serves up the tarballs
-set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps/"
+set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
     CACHE STRING "URL to a web server where the dependency tarballs live")
 
 # The following versions of each library are installed by this script:
 set(MPI_SOURCE mpich-3.2)
+set(ZLIB_SOURCE zlib-1.2.8)
 set(HDF5_SOURCE hdf5-1.8.17)
 set(NETCDF_SOURCE netcdf-4.4.1)
 set(UDUNITS_SOURCE udunits-2.2.20)
@@ -18,8 +19,10 @@ set(SETUPTOOLS_SOURCE setuptools-25.1.0)
 set(SWIG_SOURCE swig-3.0.10)
 set(CYTHON_SOURCE Cython-0.24.1)
 set(NUMPY_SOURCE numpy-1.11.1)
-set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 set(MPI4PY_SOURCE mpi4py-2.0.0)
+set(FREETYPE_SOURCE freetype-2.6)
+set(LIBPNG_SOURCE libpng-1.6.23)
+set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "Install Boost" ON)
@@ -133,16 +136,30 @@ else()
     message(STATUS "MPI -- disabled")
 endif()
 
+# zlib
+if (ENABLE_PYTHON OR ENABLE_NETCDF)
+    message(STATUS "zlib -- enabled")
+    ExternalProject_Add(zlib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${ZLIB_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${ZLIB_SOURCE}
+        CONFIGURE_COMMAND env ${ENV} ${PROJECT_BINARY_DIR}/${ZLIB_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+else()
+    message(STATUS "zlib -- disabled")
+endif()
+
 # NetCDF group
 if (ENABLE_NETCDF)
     # Build the HDF5 parallel I/O library.
     message(STATUS "HDF5 -- enabled")
 
+    set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-unsupported  --enable-hl
         --enable-threadsafe --enable-production)
-
     if (ENABLE_MPI)
-        set(hdf5_deps mpich)
+        list(APPEND hdf5_deps mpich)
         list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
     endif()
 
@@ -312,10 +329,32 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1 LOG_INSTALL 1)
     endif()
 
+    # libpng
+    message(STATUS "libpng -- enabled")
+    ExternalProject_Add(libpng
+        DEPENDS zlib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${LIBPNG_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}
+        CONFIGURE_COMMAND env ${ENV} ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
+    # freetype
+    message(STATUS "freetype -- enabled")
+    ExternalProject_Add(freetype
+        DEPENDS zlib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${FREETYPE_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}
+        CONFIGURE_COMMAND env ${ENV} ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
     # Build matplotlib
     message(STATUS "matplotlib -- enabled")
     ExternalProject_Add(matplotlib
-        DEPENDS numpy
+        DEPENDS Python numpy freetype libpng
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${MATPLOTLIB_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${MATPLOTLIB_SOURCE}
@@ -333,6 +372,8 @@ else()
     if (ENABLE_MPI)
         message(STATUS "mpi4py -- disabled")
     endif()
+    message(STATUS "libpng -- disabled")
+    message(STATUS "freetype -- disabled")
     message(STATUS "matplotlib -- disabled")
 endif()
 
