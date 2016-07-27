@@ -236,7 +236,7 @@ if (ENABLE_PYTHON)
 
   # Build numpy.
   ExternalProject_Add(numpy
-      DEPENDS Cython
+      DEPENDS Python Cython
       SOURCE_DIR ${PROJECT_SOURCE_DIR}/numpy
       CONFIGURE_COMMAND ""
       BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
@@ -244,7 +244,17 @@ if (ENABLE_PYTHON)
       INSTALL_COMMAND ""
       BUILD_IN_SOURCE 1 LOG_BUILD 1)
 
-  # Build mpi4py if requested.
+  # Build matplotlib
+  ExternalProject_Add(matplotlib
+      DEPENDS numpy
+      SOURCE_DIR ${PROJECT_SOURCE_DIR}/matplotlib
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+          setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1 LOG_BUILD 1)
+
+  # Build mpi4py if MPI was requested.
   if (ENABLE_MPI)
     ExternalProject_Add(mpi4py
         DEPENDS mpich numpy
