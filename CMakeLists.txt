@@ -14,6 +14,8 @@ set(HDF5_SOURCE hdf5-1.8.17)
 set(NETCDF_SOURCE netcdf-4.4.1)
 set(UDUNITS_SOURCE udunits-2.2.20)
 set(BOOST_SOURCE boost_1_61_0)
+set(NCURSES_SOURCE ncurses-6.0)
+set(READLINE_SOURCE readline-6.3)
 set(PYTHON_SOURCE Python-2.7.12)
 set(SETUPTOOLS_SOURCE setuptools-25.1.0)
 set(SWIG_SOURCE swig-3.0.10)
@@ -251,9 +253,30 @@ endif()
 
 # Python group
 if (ENABLE_PYTHON)
+    # ncurses
+    message(STATUS "ncurses -- enabled")
+    ExternalProject_Add(ncurses
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${NCURSES_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${NCURSES_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${NCURSES_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
+    # readline
+    message(STATUS "readline -- enabled")
+    ExternalProject_Add(readline
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${READLINE_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
     # Build Python.
     message(STATUS "Python -- enabled")
     ExternalProject_Add(Python
+        DEPENDS ncurses readline
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${PYTHON_SOURCE}.tgz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}
