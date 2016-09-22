@@ -156,15 +156,17 @@ endif()
 if (ENABLE_NETCDF)
     # Build the HDF5 parallel I/O library.
     message(STATUS "HDF5 -- enabled")
-
     set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-unsupported  --enable-hl
         --enable-threadsafe --enable-production)
-    if (ENABLE_MPI)
-        list(APPEND hdf5_deps mpich)
-        list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
-    endif()
-
+    # unfortunately hdf5's configure script provides no way to set path
+    # to mpi libraries. for now we'll disable parallel hdf5
+    #if (NOT WITHOUT_MPI)
+    #    if (ENABLE_MPICH)
+    #       list(APPEND hdf5_deps mpich)
+    #    endif()
+    #    list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
+    #endif()
     ExternalProject_Add(hdf5
         DEPENDS ${hdf5_deps}
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -193,8 +195,7 @@ if (ENABLE_NETCDF)
            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
            -DENABLE_NETCDF4=ON -DENABLE_TESTS=OFF -DBUILD_EXAMPLES=OFF
-           -DNC_HAVE_PARALLEL_HDF5=${ENABLE_MPI}
-           -DHDF5_IS_PARALLEL=${ENABLE_MPI}
+           -DNC_HAVE_PARALLEL_HDF5=OFF -DHDF5_IS_PARALLEL=OFF
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "HDF5 -- disabled")
