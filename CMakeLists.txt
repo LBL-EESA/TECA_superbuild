@@ -29,7 +29,8 @@ set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "Install Boost" ON)
 option(ENABLE_LIBXLSXWRITER "Install libxlsxwriter" ON)
-option(ENABLE_MPI "Install MPI group" ON)
+option(ENABLE_MPICH "Install MPI" ON)
+option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "Install NetCDF group" ON)
 option(ENABLE_PYTHON "Install Python group" ON)
 option(ENABLE_TECA "Install TECA" ON)
@@ -125,7 +126,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # Build MPICH if MPI is requested.
-if (ENABLE_MPI)
+if (NOT WITHOUT_MPI AND ENABLE_MPICH)
     message(STATUS "MPI -- enabled")
     ExternalProject_Add(mpich
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -336,21 +337,31 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build mpi4py if MPI was requested.
-    if (ENABLE_MPI)
+    set(MPI4PY_CONFIG "MPICH" CACHE STRING
+        "Select the mpi4py configuration we use.")
+
+    if (NOT WITHOUT_MPI)
+        set(mpi4py_deps numpy)
+        if (ENABLE_MPICH)
+            list(APPEND mpi4py_deps mpich)
+        endif()
+        configure_file(mpi4py.cfg.in mpi4py.cfg)
         message(STATUS "mpi4py -- enabled")
         ExternalProject_Add(mpi4py
-            DEPENDS mpich numpy
+            DEPENDS ${mpi4py_deps}
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${MPI4PY_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${MPI4PY_SOURCE}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env}
                 ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build
-                --mpicc=${CMAKE_INSTALL_PREFIX}/bin/mpicc
+                --mpi=${MPI4PY_CONFIG},${PROJECT_BINARY_DIR}/mpi4py.cfg
             INSTALL_COMMAND env ${env}
                 ${CMAKE_INSTALL_PREFIX}/bin/python setup.py
             install --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1 LOG_INSTALL 1)
+    else()
+        message(STATUS "mpi4py -- disabled")
     endif()
 
     # libpng
@@ -393,9 +404,7 @@ else()
     message(STATUS "SWIG -- disabled")
     message(STATUS "Cython -- disabled")
     message(STATUS "NumPy -- disabled")
-    if (ENABLE_MPI)
-        message(STATUS "mpi4py -- disabled")
-    endif()
+    message(STATUS "mpi4py -- disabled")
     message(STATUS "libpng -- disabled")
     message(STATUS "freetype -- disabled")
     message(STATUS "matplotlib -- disabled")
@@ -434,7 +443,10 @@ endif()
 if (ENABLE_TECA)
     message(STATUS "TECA -- enabled")
     set(teca_deps netcdf Python boost libxlsxwriter udunits)
-    if (ENABLE_MPI)
+    if (NOT WITHOUT_MPI)
+        if (ENABLE_MPICH)
+            list(APPEND teca_deps mpich)
+        endif()
         list(APPEND teca_deps mpi4py)
     endif()
     ExternalProject_Add(TECA
