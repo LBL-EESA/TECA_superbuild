@@ -377,6 +377,11 @@ if (ENABLE_PYTHON)
     endif()
 
     if (ENABLE_MATPLOTLIB)
+        find_program(PKG_CONFIG pkg-config DOC "pkg-config program")
+        if (NOT PKG_CONFIG)
+            message(FATAL_ERROR "pkg-config is required to build matplotlib")
+        endif()
+
         # libpng
         message(STATUS "libpng -- enabled")
         ExternalProject_Add(libpng
