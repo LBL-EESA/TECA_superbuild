@@ -40,6 +40,7 @@ option(ENABLE_MPICH "builds and installs MPICH MPI" ON)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
+option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" OFF)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 
@@ -375,131 +376,144 @@ if (ENABLE_PYTHON)
         message(STATUS "mpi4py -- disabled")
     endif()
 
-    # libpng
-    message(STATUS "libpng -- enabled")
-    ExternalProject_Add(libpng
-        DEPENDS zlib
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${LIBPNG_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}/configure
-            --prefix=${CMAKE_INSTALL_PREFIX}
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    if (ENABLE_MATPLOTLIB)
+        # libpng
+        message(STATUS "libpng -- enabled")
+        ExternalProject_Add(libpng
+            DEPENDS zlib
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${LIBPNG_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}
+            CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}/configure
+                --prefix=${CMAKE_INSTALL_PREFIX}
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # freetype
-    message(STATUS "freetype -- enabled")
-    ExternalProject_Add(freetype
-        DEPENDS zlib
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${FREETYPE_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}/configure
-            --prefix=${CMAKE_INSTALL_PREFIX}
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # freetype
+        message(STATUS "freetype -- enabled")
+        ExternalProject_Add(freetype
+            DEPENDS zlib
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${FREETYPE_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}
+            CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}/configure
+                --prefix=${CMAKE_INSTALL_PREFIX}
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # six
-    message(STATUS "six -- enabled")
-    ExternalProject_Add(six
-        DEPENDS setuptools
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${SIX_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${SIX_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # six
+        message(STATUS "six -- enabled")
+        ExternalProject_Add(six
+            DEPENDS setuptools
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${SIX_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SIX_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # python_dateutil
-    message(STATUS "python_dateutil -- enabled")
-    ExternalProject_Add(python_dateutil
-        DEPENDS six
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${PYTHON_DATEUTIL_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_DATEUTIL_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # python_dateutil
+        message(STATUS "python_dateutil -- enabled")
+        ExternalProject_Add(python_dateutil
+            DEPENDS six
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${PYTHON_DATEUTIL_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_DATEUTIL_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # pyparsing
-    message(STATUS "pyparsing -- enabled")
-    ExternalProject_Add(pyparsing
-        DEPENDS setuptools
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${PYPARSING_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYPARSING_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # pyparsing
+        message(STATUS "pyparsing -- enabled")
+        ExternalProject_Add(pyparsing
+            DEPENDS setuptools
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${PYPARSING_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYPARSING_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # pytz
-    message(STATUS "pytz -- enabled")
-    ExternalProject_Add(pytz
-        DEPENDS setuptools
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${PYTZ_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTZ_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # cycler
+        message(STATUS "cycler -- enabled")
+        ExternalProject_Add(cycler
+            DEPENDS six
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${CYCLER_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYCLER_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # cycler
-    message(STATUS "cycler -- enabled")
-    ExternalProject_Add(cycler
-        DEPENDS six
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${CYCLER_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYCLER_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # pytz
+        message(STATUS "pytz -- enabled")
+        ExternalProject_Add(pytz
+            DEPENDS setuptools
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${PYTZ_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTZ_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # subprocess32
-    message(STATUS "subprocess32 -- enabled")
-    ExternalProject_Add(subprocess32
-        DEPENDS setuptools
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${SUBPROCESS32_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${SUBPROCESS32_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # subprocess32
+        message(STATUS "subprocess32 -- enabled")
+        ExternalProject_Add(subprocess32
+            DEPENDS setuptools
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${SUBPROCESS32_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SUBPROCESS32_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # functools32
-    message(STATUS "functools32 -- enabled")
-    ExternalProject_Add(functools32
-        DEPENDS setuptools
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${FUNCTOOLS32_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${FUNCTOOLS32_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        # functools32
+        message(STATUS "functools32 -- enabled")
+        ExternalProject_Add(functools32
+            DEPENDS setuptools
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${FUNCTOOLS32_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${FUNCTOOLS32_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # Build matplotlib
-    message(STATUS "matplotlib -- enabled")
-    ExternalProject_Add(matplotlib
-        DEPENDS Python numpy freetype libpng pyparsing python_dateutil cycler pytz subprocess32 functools32
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${MATPLOTLIB_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${MATPLOTLIB_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+        # Build matplotlib
+        message(STATUS "matplotlib -- enabled")
+        ExternalProject_Add(matplotlib
+            DEPENDS Python numpy freetype libpng pyparsing python_dateutil cycler pytz subprocess32 functools32
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${MATPLOTLIB_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${MATPLOTLIB_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+        else()
+            message(STATUS "libpng -- disabled")
+            message(STATUS "freetype -- disabled")
+            message(STATUS "six -- disabled")
+            message(STATUS "python_dateutil -- disabled")
+            message(STATUS "pyparsing -- disabled")
+            message(STATUS "cycler -- disabled")
+            message(STATUS "pytz -- disabled")
+            message(STATUS "subprocess32 -- disabled")
+            message(STATUS "functools32 -- disabled")
+            message(STATUS "matplotlib -- disabled")
+        endif()
 else()
     message(STATUS "Python -- disabled")
     message(STATUS "setuptools -- disabled")
