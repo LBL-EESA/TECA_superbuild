@@ -43,6 +43,7 @@ option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" OFF)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
+option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
 message(STATUS "C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
 message(STATUS "C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
@@ -76,15 +77,15 @@ set_property(CACHE TARGET_PLATFORM PROPERTY STRINGS
 if (TARGET_PLATFORM STREQUAL "generic")
   # go with the defaults specified by the build type
 elseif(TARGET_PLATFORM STREQUAL "native")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
-        CACHE STRING "" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
-        CACHE STRING "" FORCE)
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # Clang's offerings are pretty spare at the moment (maybe?).
-    # go with the defaults
-  endif()
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+            CACHE STRING "" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+            CACHE STRING "" FORCE)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        # Clang's offerings are pretty spare at the moment (maybe?).
+        # go with the defaults
+    endif()
 elseif(TARGET_PLATFORM STREQUAL "sandybridge")
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(CMAKE_C_FLAGS_RELEASE "-O3 -march=sandybridge -mtune=sandybridge -mavx -DNDEBUG"
@@ -96,33 +97,40 @@ elseif(TARGET_PLATFORM STREQUAL "sandybridge")
     # go with the defaults
   endif()
 else()
-  message(FATAL_ERROR "Unknown platform: ${TARGET_PLATFORM}")
+    message(FATAL_ERROR "Unknown platform: ${TARGET_PLATFORM}")
 endif()
 message(STATUS "Configuring for ${TARGET_PLATFORM} platform")
 
 # collect flags to pass them into autotools scripts
-set(c_flags)
-set(cxx_flags)
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(c_flags ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE})
-  set(cxx_flags ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE})
-elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(c_flags ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG})
-  set(cxx_flags ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG})
-else()
-  message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
+set(cpp_flags "-I${CMAKE_INSTALL_PREFIX}/include")
+if (ENABLE_MEMCHECK)
+    string(CONCAT cpp_flags "${cpp_flags} -DPy_USING_MEMORY_DEBUGGER")
 endif()
-message(STATUS "Compiling with CFLAGS=${c_flags}")
-message(STATUS "Compiling with CXXFLAGS=${cxx_flags}")
+message(STATUS "CPPFLAGS=${cpp_flags}")
+
+set(c_flags "-I${CMAKE_INSTALL_PREFIX}/include")
+set(cxx_flags "-I${CMAKE_INSTALL_PREFIX}/include")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    string(CONCAT c_flags "${c_flags} ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+    string(CONCAT cxx_flags "${cxx_flags} ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    string(CONCAT c_flags "${c_flags} ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_DEBUG}")
+    string(CONCAT cxx_flags "${cxx_flags} ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+else()
+    message(FATAL_ERROR "Unknown build type: ${CMAKE_BUILD_TYPE}")
+endif()
+message(STATUS "CFLAGS=${c_flags}")
+message(STATUS "CXXFLAGS=${cxx_flags}")
+
+set(ld_flags "-L/${CMAKE_INSTALL_PREFIX}/lib -L${CMAKE_INSTALL_PREFIX}/lib64")
+message(STATUS "LDFLAGS=${ld_flags}")
 
 # set the build enviornment for autotools builds and Python builds
 # this ensures that python-config works as expected and prevents
 # external Python installs from mixing in. this is also the environment
 # that should be used at run-time.
 set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-    "CPPFLAGS=-I${CMAKE_INSTALL_PREFIX}/include" "CFLAGS=${c_flags} -I${CMAKE_INSTALL_PREFIX}/include"
-    "CXXFLAGS=${cxx_flags} -I${CMAKE_INSTALL_PREFIX}/include"
-    "LDFLAGS=-L/${CMAKE_INSTALL_PREFIX}/lib -L${CMAKE_INSTALL_PREFIX}/lib64"
+    "CPPFLAGS=${cpp_flags}" "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" "LDFLAGS=${ld_flags}"
     LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{LD_LIBRARY_PATH}
     DYLD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{DYLD_LIBRARY_PATH}
     PKG_CONFIG_PATH=${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig:$ENV{PKG_CONFIG_PATH}
