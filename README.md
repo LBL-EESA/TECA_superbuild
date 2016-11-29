@@ -1,6 +1,6 @@
 # TECA 3rd-party libraries
 This repo contains build scripts for 3rd-party dependencies
-of TECA.
+of [TECA](https://github.com/LBL-EESA/TECA).
 
 ## Quick Start
 To build the released version of TECA including all of its
