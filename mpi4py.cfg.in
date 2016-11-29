@@ -12,10 +12,10 @@ extra_objects        =
 [edison]
 mpicc                = @CMAKE_C_COMPILER@
 mpicxx               = @CMAKE_CXX_COMPILER@
-include_dirs         = @CMAKE_INSTALL_PREFIX@/include:/opt/cray/mpt/7.3.1/gni/mpich-gnu/5.1/include
+include_dirs         = @CMAKE_INSTALL_PREFIX@/include:/opt/cray/mpt/7.4.1/gni/mpich-gnu/5.1/include
 libraries            = mpichcxx mpich sma pmi dmapp ugni alpslli alpsutil rca xpmem
-library_dirs         = @CMAKE_INSTALL_PREFIX@/lib:/opt/cray/mpt/7.3.1/gni/sma/lib64:/opt/cray/mpt/7.3.1/gni/mpich-gnu/5.1/lib:/opt/cray/rca/1.0.0-2.0502.57212.2.56.ari/lib64:/opt/cray/alps/5.2.3-2.0502.9295.14.14.ari/lib64:/opt/cray/xpmem/0.1-2.0502.57015.1.15.ari/lib64:/opt/cray/dmapp/7.0.1-1.0502.10246.8.47.ari/lib64:/opt/cray/pmi/5.0.10-1.0000.11050.0.0.ari/lib64:/opt/cray/ugni/6.0-1.0502.10245.9.9.ari/lib64:/opt/cray/udreg/2.3.2-1.0502.9889.2.20.ari/lib64
-runtime_library_dirs = @CMAKE_INSTALL_PREFIX@/lib
+library_dirs         = @CMAKE_INSTALL_PREFIX@/lib:/opt/cray/rca/1.0.0-2.0502.57212.2.56.ari/lib64:/opt/cray/alps/5.2.3-2.0502.9295.14.14.ari/lib64:/opt/cray/xpmem/0.1-2.0502.57015.1.15.ari/lib64:/opt/cray/dmapp/7.0.1-1.0502.10246.8.47.ari/lib64:/opt/cray/pmi/5.0.10-1.0000.11050.0.0.ari/lib64:/opt/cray/ugni/6.0-1.0502.10245.9.9.ari/lib64:/opt/cray/udreg/2.3.2-1.0502.9889.2.20.ari/lib64:/opt/cray/mpt/7.4.1/gni/sma/lib64:/opt/cray/mpt/7.4.1/gni/mpich-gnu/5.1/lib:
+runtime_library_dirs = @CMAKE_INSTALL_PREFIX@/lib:
 extra_compile_args   = @CMAKE_C_FLAGS@
 extra_link_args      =
 extra_objects        =
