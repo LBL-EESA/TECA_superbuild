@@ -602,7 +602,6 @@ if (ENABLE_LIBXLSXWRITER)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND env ${env} make install
         BINARY_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
-        INSTALL_COMMAND ""
         LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "LIBXLSXWRITER .......... Disabled")
