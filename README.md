@@ -8,7 +8,7 @@ To build the latest released version of TECA including all of its
 dependencies.
 
 ```bash
-$ git clone https://github.com/LBL-EESA/TECA_superbuild.git
+$ git clone --depth=1 https://github.com/LBL-EESA/TECA_superbuild.git
 $ cd TECA_superbuild
 $ mkdir build
 $ cd build
