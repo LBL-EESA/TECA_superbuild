@@ -7,6 +7,9 @@ include(ExternalProject)
 set(TECA_URL "http://github.com/LBL-EESA/TECA"
     CACHE STRING "URL to the TECA source code repository")
 
+set(TECA_DATA_URL "svn://missmarple.lbl.gov/work3/teca/TECA_data"
+    CACHE STRING "URL to the TECA regresion test data repository")
+
 set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
@@ -139,7 +142,8 @@ set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{LD_LIBRARY_PATH}
     DYLD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{DYLD_LIBRARY_PATH}
     PKG_CONFIG_PATH=${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig:$ENV{PKG_CONFIG_PATH}
-    PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/ PATH=${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH})
+    PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/
+    PATH=.:${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH} PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg)
 
 # configure a bash script that will let us reproduce
 # the build enviornment at run-time
@@ -583,7 +587,24 @@ endif()
 # TECA proper
 if (ENABLE_TECA)
     message(STATUS "TECA -- enabled")
-    set(teca_deps netcdf Python boost libxlsxwriter udunits)
+    # download the regression test data
+    set(TECA_DATA_REV "-rHEAD")
+    set(TECA_DATA_UPDATE "svn update")
+    set(TECA_UPDATE "git pull --rebase")
+    if (TECA_SOURCE STREQUAL "2.0.0")
+        set(TECA_UPDATE "")
+        set(TECA_DATA_REV "-r24")
+        set(TECA_DATA_UPDATE "")
+    endif()
+    ExternalProject_Add(TECA_data
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        SVN_REPOSITORY ${TECA_DATA_URL}
+        SVN_REVISION ${TECA_DATA_REV}
+        UPDATE_COMMAND ${TECA_DATA_UPDATE}
+        CONFIGURE_COMMAND "" BUILD_COMMAND ""
+        INSTALL_COMMAND "" LOG_DOWNLOAD 1)
+    # download and build TECA
+    set(teca_deps netcdf Python boost libxlsxwriter udunits TECA_data)
     if (NOT WITHOUT_MPI)
         if (ENABLE_MPICH)
             list(APPEND teca_deps mpich)
@@ -606,8 +627,12 @@ if (ENABLE_TECA)
             "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
             "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-            -DTECA_HAS_VTK=OFF
-        LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+            -DTECA_DATA_ROOT=${PROJECT_BINARY_DIR}/TECA_data-prefix/src/TECA_data
+            -DTECA_HAS_VTK=OFF -DBUILD_TESTING=ON
+            ${PROJECT_BINARY_DIR}/TECA
+        TEST_AFTER_INSTALL 1
+        TEST_COMMAND env ${env} ctest --output-on-failure
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "TECA -- disabled")
 endif()
