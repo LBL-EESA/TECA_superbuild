@@ -13,6 +13,8 @@ set(TECA_DATA_URL "svn://missmarple.lbl.gov/work3/teca/TECA_data"
 set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
+set(teca_deps)
+
 # The following versions of each library are installed by this script:
 set(MPI_SOURCE mpich-3.2)
 set(ZLIB_SOURCE zlib-1.2.8)
@@ -207,6 +209,7 @@ if (ENABLE_NETCDF)
 
     # Build NetCDF.
     message(STATUS "NetCDF ................. Enabled")
+    list(APPEND teca_deps netcdf)
     ExternalProject_Add(netcdf
         DEPENDS hdf5
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -234,6 +237,7 @@ endif()
 # Build UDUnits.
 if (ENABLE_UDUNITS)
     message(STATUS "UDUNITS ................ Enabled")
+    list(APPEND teca_deps udunits)
     ExternalProject_Add(udunits
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${UDUNITS_SOURCE}.tar.gz
@@ -257,6 +261,7 @@ endif()
 # Build Boost.
 if (ENABLE_BOOST)
     message(STATUS "Boost .................. Enabled")
+    list(APPEND teca_deps boost)
     if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
         (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
         set(boost_toolset toolset=clang)
@@ -327,6 +332,7 @@ if (ENABLE_PYTHON)
 
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
+    list(APPEND teca_deps SWIG)
     ExternalProject_Add(SWIG
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${SWIG_SOURCE}.tar.gz
@@ -351,6 +357,7 @@ if (ENABLE_PYTHON)
 
     # Build numpy.
     message(STATUS "NumPy .................. Enabled")
+    list(APPEND teca_deps numpy)
     ExternalProject_Add(numpy
         DEPENDS Python Cython setuptools
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -373,6 +380,7 @@ if (ENABLE_PYTHON)
         endif()
         configure_file(mpi4py.cfg.in mpi4py.cfg)
         message(STATUS "mpi4py ................. Enabled")
+        list(APPEND teca_deps mpi4py)
         ExternalProject_Add(mpi4py
             DEPENDS ${mpi4py_deps}
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -511,6 +519,7 @@ if (ENABLE_PYTHON)
 
         # Build matplotlib
         message(STATUS "matplotlib ............. Enabled")
+        list(APPEND teca_deps matplotlib)
         ExternalProject_Add(matplotlib
             DEPENDS Python numpy freetype libpng pyparsing python_dateutil cycler pytz subprocess32 functools32
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -554,6 +563,9 @@ endif()
 # Build libxlsxwriter.
 if (ENABLE_LIBXLSXWRITER)
     message(STATUS "LIBXLSXWRITER .......... Enabled")
+    list(APPEND teca_deps libxlsxwriter)
+
+    # FIXME -- see issue #21
     # First copy the source files to a new location.
     execute_process(COMMAND cmake -E copy_directory ${PROJECT_SOURCE_DIR}/libxlsxwriter
         ${PROJECT_BINARY_DIR}/libxlsxwriter RESULT_VARIABLE stat)
@@ -600,13 +612,6 @@ if (ENABLE_TECA)
         CONFIGURE_COMMAND "" BUILD_COMMAND ""
         INSTALL_COMMAND "" LOG_DOWNLOAD 1)
     # download and build TECA
-    set(teca_deps netcdf Python boost libxlsxwriter udunits TECA_data)
-    if (NOT WITHOUT_MPI)
-        if (ENABLE_MPICH)
-            list(APPEND teca_deps mpich)
-        endif()
-        list(APPEND teca_deps mpi4py)
-    endif()
     ExternalProject_Add(TECA
         DEPENDS ${teca_deps}
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -628,7 +633,7 @@ if (ENABLE_TECA)
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL 1
         TEST_COMMAND env ${env} ctest --output-on-failure
-        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 0 LOG_BUILD 0 LOG_INSTALL 0)
 else()
     message(STATUS "TECA ................... Disabled")
 endif()
