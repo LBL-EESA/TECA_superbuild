@@ -154,7 +154,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
 
 # Build MPICH if MPI is requested.
 if (NOT WITHOUT_MPI AND ENABLE_MPICH)
-    message(STATUS "MPI -- enabled")
+    message(STATUS "mpich .................. Enabled")
     ExternalProject_Add(mpich
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${MPI_SOURCE}.tar.gz
@@ -163,12 +163,12 @@ if (NOT WITHOUT_MPI AND ENABLE_MPICH)
             --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "MPI -- disabled")
+    message(STATUS "mpich .................. Disabled")
 endif()
 
 # zlib
 if (ENABLE_PYTHON OR ENABLE_NETCDF)
-    message(STATUS "zlib -- enabled")
+    message(STATUS "zlib ................... Enabled")
     ExternalProject_Add(zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${ZLIB_SOURCE}.tar.gz
@@ -178,13 +178,13 @@ if (ENABLE_PYTHON OR ENABLE_NETCDF)
             --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "zlib -- disabled")
+    message(STATUS "zlib ................... Disabled")
 endif()
 
 # NetCDF group
 if (ENABLE_NETCDF)
     # Build the HDF5 parallel I/O library.
-    message(STATUS "HDF5 -- enabled")
+    message(STATUS "HDF5 ................... Enabled")
     set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-unsupported  --enable-hl
         --enable-threadsafe --enable-production)
@@ -206,7 +206,7 @@ if (ENABLE_NETCDF)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build NetCDF.
-    message(STATUS "NetCDF -- enabled")
+    message(STATUS "NetCDF ................. Enabled")
     ExternalProject_Add(netcdf
         DEPENDS hdf5
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -227,14 +227,13 @@ if (ENABLE_NETCDF)
            -DNC_HAVE_PARALLEL_HDF5=OFF -DHDF5_IS_PARALLEL=OFF
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "HDF5 -- disabled")
-    message(STATUS "NetCDF -- disabled")
+    message(STATUS "HDF5 ................... Disabled")
+    message(STATUS "NetCDF ................. Disabled")
 endif()
 
 # Build UDUnits.
 if (ENABLE_UDUNITS)
-    message(STATUS "UDUNITS -- enabled")
-
+    message(STATUS "UDUNITS ................ Enabled")
     ExternalProject_Add(udunits
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${UDUNITS_SOURCE}.tar.gz
@@ -252,20 +251,18 @@ if (ENABLE_UDUNITS)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "UDUNITS -- disabled")
+    message(STATUS "UDUNITS ................ Disabled")
 endif()
 
 # Build Boost.
 if (ENABLE_BOOST)
-    message(STATUS "Boost -- enabled")
-
+    message(STATUS "Boost .................. Enabled")
     if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
         (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
         set(boost_toolset toolset=clang)
         set(boost_cxx_flags -stdlib=libc++)
         set(boost_ld_flags linkflags=-stdlib=libc++)
     endif()
-
     ExternalProject_Add(boost
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${BOOST_SOURCE}.tar.gz
@@ -278,13 +275,13 @@ if (ENABLE_BOOST)
         INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "Boost -- disabled")
+    message(STATUS "Boost .................. Disabled")
 endif()
 
 # Python group
 if (ENABLE_PYTHON)
     # ncurses
-    message(STATUS "ncurses -- enabled")
+    message(STATUS "ncurses ................ Enabled")
     ExternalProject_Add(ncurses
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NCURSES_SOURCE}.tar.gz
@@ -294,7 +291,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # readline
-    message(STATUS "readline -- enabled")
+    message(STATUS "readline ............... Enabled")
     ExternalProject_Add(readline
         DEPENDS ncurses
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -305,7 +302,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Python.
-    message(STATUS "Python -- enabled")
+    message(STATUS "Python ................. Enabled")
     ExternalProject_Add(Python
         DEPENDS ncurses readline zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -316,7 +313,7 @@ if (ENABLE_PYTHON)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build setuptools
-    message(STATUS "setuptools -- enabled")
+    message(STATUS "setuptools ............. Enabled")
     ExternalProject_Add(setuptools
         DEPENDS Python
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -329,7 +326,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build Swig.
-    message(STATUS "SWIG -- enabled")
+    message(STATUS "SWIG ................... Enabled")
     ExternalProject_Add(SWIG
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${SWIG_SOURCE}.tar.gz
@@ -340,7 +337,7 @@ if (ENABLE_PYTHON)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Cython.
-    message(STATUS "Cython -- enabled")
+    message(STATUS "Cython ................. Enabled")
     ExternalProject_Add(Cython
         DEPENDS Python
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -353,7 +350,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build numpy.
-    message(STATUS "NumPy -- enabled")
+    message(STATUS "NumPy .................. Enabled")
     ExternalProject_Add(numpy
         DEPENDS Python Cython setuptools
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -375,7 +372,7 @@ if (ENABLE_PYTHON)
             list(APPEND mpi4py_deps mpich)
         endif()
         configure_file(mpi4py.cfg.in mpi4py.cfg)
-        message(STATUS "mpi4py -- enabled")
+        message(STATUS "mpi4py ................. Enabled")
         ExternalProject_Add(mpi4py
             DEPENDS ${mpi4py_deps}
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -390,7 +387,7 @@ if (ENABLE_PYTHON)
             install --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1 LOG_INSTALL 1)
     else()
-        message(STATUS "mpi4py -- disabled")
+        message(STATUS "mpi4py ................. Disabled")
     endif()
 
     if (ENABLE_MATPLOTLIB)
@@ -400,7 +397,7 @@ if (ENABLE_PYTHON)
         endif()
 
         # libpng
-        message(STATUS "libpng -- enabled")
+        message(STATUS "libpng ................. Enabled")
         ExternalProject_Add(libpng
             DEPENDS zlib
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -411,7 +408,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # freetype
-        message(STATUS "freetype -- enabled")
+        message(STATUS "freetype ............... Enabled")
         ExternalProject_Add(freetype
             DEPENDS zlib
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -422,7 +419,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # six
-        message(STATUS "six -- enabled")
+        message(STATUS "six .................... Enabled")
         ExternalProject_Add(six
             DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -435,7 +432,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # python_dateutil
-        message(STATUS "python_dateutil -- enabled")
+        message(STATUS "python_dateutil ........ Enabled")
         ExternalProject_Add(python_dateutil
             DEPENDS six
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -448,7 +445,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # pyparsing
-        message(STATUS "pyparsing -- enabled")
+        message(STATUS "pyparsing .............. Enabled")
         ExternalProject_Add(pyparsing
             DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -461,7 +458,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # cycler
-        message(STATUS "cycler -- enabled")
+        message(STATUS "cycler ................. Enabled")
         ExternalProject_Add(cycler
             DEPENDS six
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -474,7 +471,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # pytz
-        message(STATUS "pytz -- enabled")
+        message(STATUS "pytz ................... Enabled")
         ExternalProject_Add(pytz
             DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -487,7 +484,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # subprocess32
-        message(STATUS "subprocess32 -- enabled")
+        message(STATUS "subprocess32 ........... Enabled")
         ExternalProject_Add(subprocess32
             DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -500,7 +497,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # functools32
-        message(STATUS "functools32 -- enabled")
+        message(STATUS "functools32 ............ Enabled")
         ExternalProject_Add(functools32
             DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -513,7 +510,7 @@ if (ENABLE_PYTHON)
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # Build matplotlib
-        message(STATUS "matplotlib -- enabled")
+        message(STATUS "matplotlib ............. Enabled")
         ExternalProject_Add(matplotlib
             DEPENDS Python numpy freetype libpng pyparsing python_dateutil cycler pytz subprocess32 functools32
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -525,39 +522,38 @@ if (ENABLE_PYTHON)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
         else()
-            message(STATUS "libpng -- disabled")
-            message(STATUS "freetype -- disabled")
-            message(STATUS "six -- disabled")
-            message(STATUS "python_dateutil -- disabled")
-            message(STATUS "pyparsing -- disabled")
-            message(STATUS "cycler -- disabled")
-            message(STATUS "pytz -- disabled")
-            message(STATUS "subprocess32 -- disabled")
-            message(STATUS "functools32 -- disabled")
-            message(STATUS "matplotlib -- disabled")
+            message(STATUS "libpng ................. Disabled")
+            message(STATUS "freetype ............... Disabled")
+            message(STATUS "six .................... Disabled")
+            message(STATUS "python_dateutil ........ Disabled")
+            message(STATUS "pyparsing .............. Disabled")
+            message(STATUS "cycler ................. Disabled")
+            message(STATUS "pytz ................... Disabled")
+            message(STATUS "subprocess32 ........... Disabled")
+            message(STATUS "matplotlib ............. Disabled")
         endif()
 else()
-    message(STATUS "Python -- disabled")
-    message(STATUS "setuptools -- disabled")
-    message(STATUS "SWIG -- disabled")
-    message(STATUS "Cython -- disabled")
-    message(STATUS "NumPy -- disabled")
-    message(STATUS "mpi4py -- disabled")
-    message(STATUS "libpng -- disabled")
-    message(STATUS "freetype -- disabled")
-    message(STATUS "six -- disabled")
-    message(STATUS "python_dateutil -- disabled")
-    message(STATUS "pyparsing -- disabled")
-    message(STATUS "cycler -- disabled")
-    message(STATUS "pytz -- disabled")
-    message(STATUS "subprocess32 -- disabled")
-    message(STATUS "functools32 -- disabled")
-    message(STATUS "matplotlib -- disabled")
+    message(STATUS "Python ................. Disabled")
+    message(STATUS "setuptools ............. Disabled")
+    message(STATUS "SWIG ................... Disabled")
+    message(STATUS "Cython ................. Disabled")
+    message(STATUS "NumPy .................. Disabled")
+    message(STATUS "mpi4py ................. Disabled")
+    message(STATUS "libpng ................. Disabled")
+    message(STATUS "freetype ............... Disabled")
+    message(STATUS "six .................... Disabled")
+    message(STATUS "python_dateutil ........ Disabled")
+    message(STATUS "pyparsing .............. Disabled")
+    message(STATUS "cycler ................. Disabled")
+    message(STATUS "pytz ................... Disabled")
+    message(STATUS "subprocess32 ........... Disabled")
+    message(STATUS "functools32 ............ Disabled")
+    message(STATUS "matplotlib ............. Disabled")
 endif()
 
 # Build libxlsxwriter.
 if (ENABLE_LIBXLSXWRITER)
-    message(STATUS "LIBXLSXWRITER -- enabled")
+    message(STATUS "LIBXLSXWRITER .......... Enabled")
     # First copy the source files to a new location.
     execute_process(COMMAND cmake -E copy_directory ${PROJECT_SOURCE_DIR}/libxlsxwriter
         ${PROJECT_BINARY_DIR}/libxlsxwriter RESULT_VARIABLE stat)
@@ -581,12 +577,12 @@ if (ENABLE_LIBXLSXWRITER)
         INSTALL_COMMAND ""
         LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "LIBXLSXWRITER -- enabled")
+    message(STATUS "LIBXLSXWRITER .......... Disabled")
 endif()
 
 # TECA proper
 if (ENABLE_TECA)
-    message(STATUS "TECA -- enabled")
+    message(STATUS "TECA ................... Enabled")
     # download the regression test data
     set(TECA_DATA_REV "-rHEAD")
     set(TECA_DATA_UPDATE "svn update")
@@ -634,5 +630,5 @@ if (ENABLE_TECA)
         TEST_COMMAND env ${env} ctest --output-on-failure
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "TECA -- disabled")
+    message(STATUS "TECA ................... Disabled")
 endif()
