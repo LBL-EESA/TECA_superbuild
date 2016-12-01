@@ -3,9 +3,12 @@ cmake_minimum_required(VERSION 3.0)
 project(TECA_3rdparty)
 include(ExternalProject)
 
-# this web server serves up the tarballs
+# where various resources are housed and served
+set(TECA_URL "http://github.com/LBL-EESA/TECA"
+    CACHE STRING "URL to the TECA source code repository")
+
 set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
-    CACHE STRING "URL to a web server where the dependency tarballs live")
+    CACHE STRING "URL to the dependency tarballs")
 
 # The following versions of each library are installed by this script:
 set(MPI_SOURCE mpich-3.2)
@@ -32,6 +35,8 @@ set(PYTZ_SOURCE pytz-2016.6.1)
 set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
+set(TECA_SOURCE 2.0.0 CACHE STRING
+    "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
@@ -41,7 +46,7 @@ option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
-option(ENABLE_TECA "builds and installs TECA" OFF)
+option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
@@ -587,8 +592,11 @@ if (ENABLE_TECA)
     endif()
     ExternalProject_Add(TECA
         DEPENDS ${teca_deps}
-        SOURCE_DIR ${PROJECT_SOURCE_DIR}/TECA
-        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND} ../TECA
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        GIT_REPOSITORY ${TECA_URL}
+        GIT_TAG ${TECA_SOURCE}
+        UPDATE_COMMAND ${TECA_UPDATE}
+        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
             "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
