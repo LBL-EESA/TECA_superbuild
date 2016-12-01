@@ -405,15 +405,26 @@ if (ENABLE_PYTHON)
         endif()
 
         # libpng
-        message(STATUS "libpng ................. Enabled")
-        ExternalProject_Add(libpng
-            DEPENDS zlib
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${LIBPNG_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}
-            CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}/configure
-                --prefix=${CMAKE_INSTALL_PREFIX}
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        set(system_libpng OFF)
+        if (APPLE)
+            # see issue #20
+            find_library(have_system_libpng libpng.dylib)
+            if (have_system_libpng)
+                set(system_libpng ON)
+                message(STATUS "libpng ................. System")
+            endif()
+        endif()
+        if (NOT system_libpng)
+            message(STATUS "libpng ................. Enabled")
+            ExternalProject_Add(libpng
+                DEPENDS zlib
+                DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+                URL ${TECA_DEPS_URL}/${LIBPNG_SOURCE}.tar.gz
+                SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}
+                CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}/configure
+                    --prefix=${CMAKE_INSTALL_PREFIX}
+                BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        endif()
 
         # freetype
         message(STATUS "freetype ............... Enabled")
@@ -520,8 +531,13 @@ if (ENABLE_PYTHON)
         # Build matplotlib
         message(STATUS "matplotlib ............. Enabled")
         list(APPEND teca_deps matplotlib)
+        set(matplotlib_deps numpy freetype pyparsing python_dateutil
+            cycler pytz subprocess32 functools32)
+        if (NOT system_libpng)
+            list(APPEND matplotlib_deps libpng)
+        endif()
         ExternalProject_Add(matplotlib
-            DEPENDS Python numpy freetype libpng pyparsing python_dateutil cycler pytz subprocess32 functools32
+            DEPENDS Python numpy ${matplotlib_deps}
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${MATPLOTLIB_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${MATPLOTLIB_SOURCE}
