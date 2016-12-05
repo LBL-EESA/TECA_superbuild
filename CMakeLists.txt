@@ -13,7 +13,7 @@ set(TECA_DATA_URL "svn://missmarple.lbl.gov/work3/teca/TECA_data"
 set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
-set(teca_deps)
+set(LIBXLSXWRITER_URL git@github.com:burlen/libxlsxwriter.git)
 
 # The following versions of each library are installed by this script:
 set(MPI_SOURCE mpich-3.2)
@@ -40,6 +40,7 @@ set(PYTZ_SOURCE pytz-2016.6.1)
 set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
+set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(TECA_SOURCE 2.0.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
@@ -54,6 +55,9 @@ option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
+
+# the list of enabled dependencies
+set(teca_deps)
 
 message(STATUS "C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
 message(STATUS "C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
@@ -169,7 +173,7 @@ else()
 endif()
 
 # zlib
-if (ENABLE_PYTHON OR ENABLE_NETCDF)
+if (ENABLE_PYTHON OR ENABLE_NETCDF OR ENABLE_LIBXLSXWRITER)
     message(STATUS "zlib ................... Enabled")
     ExternalProject_Add(zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -579,30 +583,26 @@ endif()
 # Build libxlsxwriter.
 if (ENABLE_LIBXLSXWRITER)
     message(STATUS "LIBXLSXWRITER .......... Enabled")
-    list(APPEND teca_deps libxlsxwriter)
-
-    # FIXME -- see issue #21
-    # First copy the source files to a new location.
-    execute_process(COMMAND cmake -E copy_directory ${PROJECT_SOURCE_DIR}/libxlsxwriter
-        ${PROJECT_BINARY_DIR}/libxlsxwriter RESULT_VARIABLE stat)
-
-    # Now tweak the Makefile to install files in the right spot.
-    file(READ ${PROJECT_SOURCE_DIR}/libxlsxwriter/Makefile xlsx_makefile)
-    string(REPLACE "install:" "install: all" xlsx_makefile ${xlsx_makefile})
-    string(REPLACE "cp -r include/* /usr/include" "cp -R include/* ${CMAKE_INSTALL_PREFIX}/include"
-        xlsx_makefile ${xlsx_makefile})
-    string(REPLACE "cp lib/* /usr/lib" "cp lib/* ${CMAKE_INSTALL_PREFIX}/lib"
-        xlsx_makefile ${xlsx_makefile})
-    file(WRITE ${PROJECT_BINARY_DIR}/libxlsxwriter/Makefile ${xlsx_makefile})
-
-    # Finally, build the thing.
+    list(APPEND teca_deps libxlsxwriter zlib)
     ExternalProject_Add(libxlsxwriter
-        DEPENDS zlib # For creating directories in prefix.
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} make install
-        BINARY_DIR ${PROJECT_BINARY_DIR}/libxlsxwriter
-        LOG_BUILD 1 LOG_INSTALL 1)
+        DEPENDS zlib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        #URL ${TECA_DEPS_URL}/${LIBXLSXWRITER_SOURCE}.tar.gz
+        GIT_REPOSITORY ${LIBXLSXWRITER_URL}
+        GIT_TAG cmake_configure
+        UPDATE_COMMAND ""
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBXLSXWRITER_SOURCE}
+        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+            "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
+            "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+            "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "LIBXLSXWRITER .......... Disabled")
 endif()
