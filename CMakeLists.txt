@@ -55,6 +55,7 @@ option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
+option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
@@ -626,20 +627,25 @@ if (ENABLE_TECA)
     message(STATUS "TECA ................... Enabled")
     # download the regression test data
     set(TECA_DATA_REV "-rHEAD")
-    set(TECA_DATA_UPDATE "svn update")
-    set(TECA_UPDATE "git pull --rebase")
+    set(TECA_DATA_UPDATE svn update)
+    set(TECA_UPDATE git pull --rebase)
     if (TECA_SOURCE STREQUAL "2.0.0")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r24")
         set(TECA_DATA_UPDATE "")
     endif()
-    ExternalProject_Add(TECA_data
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        SVN_REPOSITORY ${TECA_DATA_URL}
-        SVN_REVISION ${TECA_DATA_REV}
-        UPDATE_COMMAND ${TECA_DATA_UPDATE}
-        CONFIGURE_COMMAND "" BUILD_COMMAND ""
-        INSTALL_COMMAND "" LOG_DOWNLOAD 1)
+    if (ENABLE_TECA_TEST)
+        message(STATUS "TECA test .............. Enabled")
+        ExternalProject_Add(TECA_data
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            SVN_REPOSITORY ${TECA_DATA_URL}
+            SVN_REVISION ${TECA_DATA_REV}
+            UPDATE_COMMAND ${TECA_DATA_UPDATE}
+            CONFIGURE_COMMAND "" BUILD_COMMAND ""
+            INSTALL_COMMAND "" LOG_DOWNLOAD 1)
+    else()
+        message(STATUS "TECA test .............. Disabled")
+    endif()
     # download and build TECA
     ExternalProject_Add(TECA
         DEPENDS ${teca_deps}
@@ -658,11 +664,12 @@ if (ENABLE_TECA)
             "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
             -DTECA_DATA_ROOT=${PROJECT_BINARY_DIR}/TECA_data-prefix/src/TECA_data
-            -DTECA_HAS_VTK=OFF -DBUILD_TESTING=ON
+            -DTECA_HAS_VTK=OFF -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
-        TEST_AFTER_INSTALL 1
+        TEST_AFTER_INSTALL ${ENABLE_TECA_TESTS}
         TEST_COMMAND env ${env} ctest --output-on-failure
         LOG_DOWNLOAD 1 LOG_CONFIGURE 0 LOG_BUILD 0 LOG_INSTALL 0)
 else()
     message(STATUS "TECA ................... Disabled")
+    message(STATUS "TECA test .............. Disabled")
 endif()
