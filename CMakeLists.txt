@@ -16,7 +16,8 @@ set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
 set(LIBXLSXWRITER_URL git@github.com:burlen/libxlsxwriter.git)
 
 # The following versions of each library are installed by this script:
-set(MPI_SOURCE mpich-3.2)
+set(MPICH_SOURCE mpich-3.2)
+set(OPENMPI_SOURCE openmpi-2.0.1)
 set(ZLIB_SOURCE zlib-1.2.8)
 set(HDF5_SOURCE hdf5-1.8.17)
 set(NETCDF_SOURCE netcdf-4.4.1)
@@ -48,6 +49,7 @@ set(TECA_SOURCE 2.0.0 CACHE STRING
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
 option(ENABLE_MPICH "builds and installs MPICH MPI" ON)
+option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" OFF)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
@@ -161,15 +163,27 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
 # Build MPICH if MPI is requested.
 if (NOT WITHOUT_MPI AND ENABLE_MPICH)
     message(STATUS "mpich .................. Enabled")
-    ExternalProject_Add(mpich
+    message(STATUS "openmpi ................ Disabled")
+    ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${MPI_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${MPI_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${MPI_SOURCE}/configure
+        URL ${TECA_DEPS_URL}/${MPICH_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${MPICH_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${MPICH_SOURCE}/configure
             --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
+    message(STATUS "mpich .................. Disabled")
+    message(STATUS "openmpi ................ Enabled")
+    ExternalProject_Add(mpi
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${OPENMPI_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${OPENMPI_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${OPENMPI_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX} --enable-mpi-thread-multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "mpich .................. Disabled")
+    message(STATUS "openmpi ................ Disabled")
 endif()
 
 # zlib
@@ -379,8 +393,8 @@ if (ENABLE_PYTHON)
 
     if (NOT WITHOUT_MPI)
         set(mpi4py_deps numpy)
-        if (ENABLE_MPICH)
-            list(APPEND mpi4py_deps mpich)
+        if (ENABLE_MPICH OR ENABLE_OPENMPI)
+            list(APPEND mpi4py_deps mpi)
         endif()
         configure_file(mpi4py.cfg.in mpi4py.cfg)
         message(STATUS "mpi4py ................. Enabled")
