@@ -42,6 +42,7 @@ set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
+set(VTK_SOURCE VTK-7.1.0)
 set(TECA_SOURCE 2.0.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
@@ -57,6 +58,7 @@ option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
+option(ENABLE_VTK "builds and installs VTK" OFF)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
 # the list of enabled dependencies
@@ -621,6 +623,44 @@ if (ENABLE_LIBXLSXWRITER)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "LIBXLSXWRITER .......... Disabled")
+endif()
+
+# Build VTK
+if (ENABLE_VTK)
+    message(STATUS "VTK .................... Enabled")
+    set(vtk_deps)
+    set(vtk_py_conf)
+    if (ENABLE_PYTHON)
+        list(APPEND vtk_deps Python numpy)
+        list(APPEND vtk_py_conf "-DVTK_WRAP_PYTHON=ON")
+		list(APPEND vtk_py_conf "-DPYTHON_EXTRA_LIBS=\\\"\\\"")
+		list(APPEND vtk_py_conf "-DPYTHON_EXECUTABLE=${CMAKE_INSTALL_PREFIX}/bin/python")
+		list(APPEND vtk_py_conf "-DPYTHON_INCLUDE_DIR=${CMAKE_INSTALL_PREFIX}/include/python2.7")
+		list(APPEND vtk_py_conf "-DPYTHON_LIBRARY=${CMAKE_INSTALL_PREFIX}/lib/libpython2.7.so")
+    endif()
+    if (ENABLE_MATPLOTLIB)
+        list(APPEND vtk_deps matplotlib)
+    endif()
+    list(APPEND teca_deps VTK)
+    ExternalProject_Add(VTK
+        DEPENDS ${vtk_deps}
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${VTK_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${VTK_SOURCE}
+        CMAKE_COMMAND ${CMAKE_COMMAND} ../${VTK_SOURCE}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+            "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+            "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+            "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${vtk_py_conf}
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+else()
+    message(STATUS "VTK .................... Disabled")
 endif()
 
 # TECA proper
