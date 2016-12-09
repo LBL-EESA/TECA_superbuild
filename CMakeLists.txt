@@ -142,6 +142,22 @@ message(STATUS "CXXFLAGS=${cxx_flags}")
 set(ld_flags "-L/${CMAKE_INSTALL_PREFIX}/lib -L${CMAKE_INSTALL_PREFIX}/lib64")
 message(STATUS "LDFLAGS=${ld_flags}")
 
+# collect MPI falgs passed on the command line, usually only for
+# Cray builds
+set(mpi_flags)
+if (NOT WITHOUT_MPI AND NOT ENABLE_MPICH AND NOT ENABLE_OPENMPI)
+    list(APPEND mpi_flags "-DMPI_CXX_COMPILER=${MPI_CXX_COMPILER}")
+    list(APPEND mpi_flags "-DMPI_C_COMPILER=${MPI_C_COMPILER}")
+    list(APPEND mpi_flags "-DMPI_CXX_LIBRARIES=")
+    string(REPLACE ";" " " tmp "${MPI_C_LIBRARIES}")
+    list(APPEND mpi_flags "-DMPI_C_LIBRARIES=${tmp}")
+    list(APPEND mpi_flags "-DMPI_INCLUDE_PATH=${MPI_INCLUDE_PATH}")
+    list(APPEND mpi_flags "-DMPI_EXTRA_LIBRARY=")
+    list(APPEND mpi_flags "-DMPIEXEC=${MPIEXEC}")
+endif()
+set(MPI_FLAGS ${mpi_flags} CACHE STRING "MPI configuration overides")
+message(STATUS "MPI_FLAGS=${MPI_FLAGS}")
+
 # set the build enviornment for autotools builds and Python builds
 # this ensures that python-config works as expected and prevents
 # external Python installs from mixing in. this is also the environment
@@ -670,6 +686,7 @@ if (ENABLE_TECA)
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
             -DTECA_DATA_ROOT=${PROJECT_BINARY_DIR}/TECA_data-prefix/src/TECA_data
             -DTECA_HAS_VTK=OFF -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            ${MPI_FLAGS}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TESTS}
         TEST_COMMAND env ${env} ctest --output-on-failure
