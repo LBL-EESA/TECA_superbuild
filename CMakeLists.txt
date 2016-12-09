@@ -13,7 +13,7 @@ set(TECA_DATA_URL "svn://missmarple.lbl.gov/work3/teca/TECA_data"
 set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
-set(LIBXLSXWRITER_URL git@github.com:burlen/libxlsxwriter.git)
+set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.2)
