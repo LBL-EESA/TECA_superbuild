@@ -159,6 +159,11 @@ endif()
 set(MPI_FLAGS ${mpi_flags} CACHE STRING "MPI configuration overides")
 message(STATUS "MPI_FLAGS=${MPI_FLAGS}")
 
+# flags for testing
+set(CTEST_FLAGS  --output-on-failure CACHE STRING
+    "flags passed to ctest during tests after install")
+message(STATUS "CTEST_FLAGS=${CTEST_FLAGS}")
+
 # set the build enviornment for autotools builds and Python builds
 # this ensures that python-config works as expected and prevents
 # external Python installs from mixing in. this is also the environment
