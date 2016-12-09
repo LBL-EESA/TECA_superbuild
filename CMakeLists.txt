@@ -146,13 +146,17 @@ message(STATUS "LDFLAGS=${ld_flags}")
 # this ensures that python-config works as expected and prevents
 # external Python installs from mixing in. this is also the environment
 # that should be used at run-time.
+set(py_env)
+if (ENABLE_PYTHON)
+    set(py_env PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg
+        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/)
+endif()
 set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     "CPPFLAGS=${cpp_flags}" "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" "LDFLAGS=${ld_flags}"
     LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{LD_LIBRARY_PATH}
     DYLD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{DYLD_LIBRARY_PATH}
     PKG_CONFIG_PATH=${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig:$ENV{PKG_CONFIG_PATH}
-    PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/
-    PATH=.:${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH} PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg)
+    PATH=.:${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH} ${py_env})
 
 # configure a bash script that will let us reproduce
 # the build enviornment at run-time
