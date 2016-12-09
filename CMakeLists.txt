@@ -703,7 +703,7 @@ if (ENABLE_TECA)
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
-        TEST_COMMAND env ${env} ctest --output-on-failure
+        TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} || true
         LOG_DOWNLOAD 1 LOG_CONFIGURE 0 LOG_BUILD 0 LOG_INSTALL 0)
 else()
     message(STATUS "TECA ................... Disabled")
