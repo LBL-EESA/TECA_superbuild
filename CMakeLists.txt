@@ -13,7 +13,7 @@ set(TECA_DATA_URL "svn://missmarple.lbl.gov/work3/teca/TECA_data"
 set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
-set(LIBXLSXWRITER_URL git@github.com:burlen/libxlsxwriter.git)
+set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.2)
@@ -56,6 +56,7 @@ option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
+option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
@@ -142,17 +143,42 @@ message(STATUS "CXXFLAGS=${cxx_flags}")
 set(ld_flags "-L/${CMAKE_INSTALL_PREFIX}/lib -L${CMAKE_INSTALL_PREFIX}/lib64")
 message(STATUS "LDFLAGS=${ld_flags}")
 
+# collect MPI falgs passed on the command line, usually only for
+# Cray builds
+set(mpi_flags)
+if (NOT WITHOUT_MPI AND NOT ENABLE_MPICH AND NOT ENABLE_OPENMPI)
+    list(APPEND mpi_flags "-DMPI_CXX_COMPILER=${MPI_CXX_COMPILER}")
+    list(APPEND mpi_flags "-DMPI_C_COMPILER=${MPI_C_COMPILER}")
+    list(APPEND mpi_flags "-DMPI_CXX_LIBRARIES=")
+    string(REPLACE ";" " " tmp "${MPI_C_LIBRARIES}")
+    list(APPEND mpi_flags "-DMPI_C_LIBRARIES=${tmp}")
+    list(APPEND mpi_flags "-DMPI_INCLUDE_PATH=${MPI_INCLUDE_PATH}")
+    list(APPEND mpi_flags "-DMPI_EXTRA_LIBRARY=")
+    list(APPEND mpi_flags "-DMPIEXEC=${MPIEXEC}")
+endif()
+set(MPI_FLAGS ${mpi_flags} CACHE STRING "MPI configuration overides")
+message(STATUS "MPI_FLAGS=${MPI_FLAGS}")
+
+# flags for testing
+set(CTEST_FLAGS  --output-on-failure CACHE STRING
+    "flags passed to ctest during tests after install")
+message(STATUS "CTEST_FLAGS=${CTEST_FLAGS}")
+
 # set the build enviornment for autotools builds and Python builds
 # this ensures that python-config works as expected and prevents
 # external Python installs from mixing in. this is also the environment
 # that should be used at run-time.
+set(py_env)
+if (ENABLE_PYTHON)
+    set(py_env PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg
+        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/)
+endif()
 set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     "CPPFLAGS=${cpp_flags}" "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" "LDFLAGS=${ld_flags}"
     LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{LD_LIBRARY_PATH}
     DYLD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib/:${CMAKE_INSTALL_PREFIX}/lib64/:$ENV{DYLD_LIBRARY_PATH}
     PKG_CONFIG_PATH=${CMAKE_INSTALL_PREFIX}/lib/pkgconfig:${CMAKE_INSTALL_PREFIX}/lib64/pkgconfig:$ENV{PKG_CONFIG_PATH}
-    PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/
-    PATH=.:${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH} PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg)
+    PATH=.:${CMAKE_INSTALL_PREFIX}/bin/:$ENV{PATH} ${py_env})
 
 # configure a bash script that will let us reproduce
 # the build enviornment at run-time
@@ -635,8 +661,9 @@ if (ENABLE_TECA)
         set(TECA_DATA_REV "-r24")
         set(TECA_DATA_UPDATE "")
     endif()
-    if (ENABLE_TECA_TEST)
-        message(STATUS "TECA test .............. Enabled")
+    set(tmp)
+    if (ENABLE_TECA_DATA)
+        message(STATUS "TECA data .............. Enabled")
         ExternalProject_Add(TECA_data
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             SVN_REPOSITORY ${TECA_DATA_URL}
@@ -644,6 +671,13 @@ if (ENABLE_TECA)
             UPDATE_COMMAND ${TECA_DATA_UPDATE}
             CONFIGURE_COMMAND "" BUILD_COMMAND ""
             INSTALL_COMMAND "" LOG_DOWNLOAD 1)
+        set(tmp ${PROJECT_BINARY_DIR}/TECA_data-prefix/src/TECA_data)
+    else()
+        message(STATUS "TECA data .............. Disabled")
+    endif()
+    set(TECA_DATA_ROOT ${tmp} CACHE PATH "Path to TECA regression test data")
+    if (ENABLE_TECA_TEST)
+        message(STATUS "TECA test .............. Enabled")
     else()
         message(STATUS "TECA test .............. Disabled")
     endif()
@@ -664,13 +698,15 @@ if (ENABLE_TECA)
             "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
             "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-            -DTECA_DATA_ROOT=${PROJECT_BINARY_DIR}/TECA_data-prefix/src/TECA_data
-            -DTECA_HAS_VTK=OFF -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
+            -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
+            -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
-        TEST_AFTER_INSTALL ${ENABLE_TECA_TESTS}
-        TEST_COMMAND env ${env} ctest --output-on-failure
+        TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
+        TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} || true
         LOG_DOWNLOAD 1 LOG_CONFIGURE 0 LOG_BUILD 0 LOG_INSTALL 0)
 else()
     message(STATUS "TECA ................... Disabled")
+    message(STATUS "TECA data .............. Disabled")
     message(STATUS "TECA test .............. Disabled")
 endif()
