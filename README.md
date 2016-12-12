@@ -20,6 +20,7 @@ It's important to set the install prefix to a spot that is
 writable as running 'make' installs each dependency as it's
 built.
 
+### Apple Mac OSX
 When using clang On OSX one must set the compilers explicitly,
 else zlib fails to detect that its being compiled for OSX and
 libz will be built as a Linux libarary and will not contain
@@ -31,7 +32,7 @@ as a result breaking setuptools build. One can set the clang
 -DCMAKE_C_COMPILER=`which clang`
 -DCMAKE_CXX_COMPILER=`which clang++`
 ```
-
+## Running TECA Apps
 When using programs built against this install, source the following
 configuration file. This ensures that the install takes precedence
 over any conflicting installs that may be present on your system.
