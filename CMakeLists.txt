@@ -120,7 +120,7 @@ endif()
 message(STATUS "Configuring for ${TARGET_PLATFORM} platform")
 
 # collect flags to pass them into autotools scripts
-set(cpp_flags "-I${CMAKE_INSTALL_PREFIX}/include")
+set(cpp_flags "$ENV{CPPFLAGS} -I${CMAKE_INSTALL_PREFIX}/include")
 if (ENABLE_MEMCHECK)
     string(CONCAT cpp_flags "${cpp_flags} -DPy_USING_MEMORY_DEBUGGER")
 endif()
