@@ -21,6 +21,7 @@ set(OPENMPI_SOURCE openmpi-2.0.1)
 set(ZLIB_SOURCE zlib-1.2.8)
 set(HDF5_SOURCE hdf5-1.8.17)
 set(NETCDF_SOURCE netcdf-4.4.1)
+set(LIBEXPAT_SOURCE libexpat-R_2_2_0)
 set(UDUNITS_SOURCE udunits-2.2.20)
 set(BOOST_SOURCE boost_1_61_0)
 set(NCURSES_SOURCE ncurses-6.0)
@@ -282,13 +283,35 @@ endif()
 
 # Build UDUnits.
 if (ENABLE_UDUNITS)
-    message(STATUS "UDUNITS ................ Enabled")
     list(APPEND teca_deps udunits)
+    # build expat
+    message(STATUS "LIBEXPAT ............... Enabled")
+    ExternalProject_Add(libexpat
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${LIBEXPAT_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBEXPAT_SOURCE}
+        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+            "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+            "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+            "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+            "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+            -DBUILD_tools=OFF -DBUILD_tests=OFF -DBUILD_examples=OFF
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
+    # build udunits
+    message(STATUS "UDUNITS ................ Enabled")
     ExternalProject_Add(udunits
+        DEPENDS libexpat
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${UDUNITS_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${UDUNITS_SOURCE}
-        CMAKE_COMMAND ${CMAKE_COMMAND} ../${UDUNITS_SOURCE}
+        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
             "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
             "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
@@ -301,6 +324,7 @@ if (ENABLE_UDUNITS)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
+    message(STATUS "LIBEXPAT ............... Disabled")
     message(STATUS "UDUNITS ................ Disabled")
 endif()
 
