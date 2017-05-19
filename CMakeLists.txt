@@ -42,7 +42,7 @@ set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 2.1.0 CACHE STRING
+set(TECA_SOURCE 2.1.1 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -94,11 +94,20 @@ set_property(CACHE TARGET_PLATFORM PROPERTY STRINGS
 
 if (TARGET_PLATFORM STREQUAL "generic")
   # go with the defaults specified by the build type
+elseif(TARGET_PLATFORM STREQUAL "knl")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=knl -mtune=knl -DNDEBUG"
+            CACHE STRING "" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=knl -mtune=knl -DNDEBUG"
+            CACHE STRING "" FORCE)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(SEND_ERROR "No knl support with clang")
+    endif()
 elseif(TARGET_PLATFORM STREQUAL "native")
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -DNDEBUG"
             CACHE STRING "" FORCE)
-        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -DNDEBUG"
             CACHE STRING "" FORCE)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         # Clang's offerings are pretty spare at the moment (maybe?).
@@ -660,7 +669,7 @@ if (ENABLE_TECA)
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r24")
         set(TECA_DATA_UPDATE "")
-    elseif (TECA_SOURCE STREQUAL "2.1.0")
+    elseif (TECA_SOURCE STREQUAL "2.1.0" OR TECA_SOURCE STREQUAL "2.1.1")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r34")
         set(TECA_DATA_UPDATE "")
