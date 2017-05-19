@@ -94,11 +94,20 @@ set_property(CACHE TARGET_PLATFORM PROPERTY STRINGS
 
 if (TARGET_PLATFORM STREQUAL "generic")
   # go with the defaults specified by the build type
+elseif(TARGET_PLATFORM STREQUAL "knl")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=knl -mtune=knl -DNDEBUG"
+            CACHE STRING "" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=knl -mtune=knl -DNDEBUG"
+            CACHE STRING "" FORCE)
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(SEND_ERROR "No knl support with clang")
+    endif()
 elseif(TARGET_PLATFORM STREQUAL "native")
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+        set(CMAKE_C_FLAGS_RELEASE "-O3 -march=native -mtune=native -DNDEBUG"
             CACHE STRING "" FORCE)
-        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -mavx -DNDEBUG"
+        set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -mtune=native -DNDEBUG"
             CACHE STRING "" FORCE)
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         # Clang's offerings are pretty spare at the moment (maybe?).
