@@ -25,7 +25,8 @@ mpicc                = @CMAKE_C_COMPILER@
 mpicxx               = @CMAKE_CXX_COMPILER@
 include_dirs         = @CMAKE_INSTALL_PREFIX@/include:/opt/cray/pe/mpt/7.4.4/gni/mpich-gnu/5.1/include
 libraries            = mpichcxx mpich pmi dmapp ugni alpslli alpsutil rca xpmem
-library_dirs         = @CMAKE_INSTALL_PREFIX@/lib:/opt/cray/rca/1.0.0-8.1/lib64:/opt/cray/alps/6.1.3-17.12/lib64:/opt/cray/xpmem/0.1-4.5/lib64:/opt/cray/dmapp/7.1.0-12.37/lib64:/opt/cray/pe/pmi/5.0.10-1.0000.11050.0.0.ari/lib64:/opt/cray/ugni/6.0.12-2.1/lib64:/opt/cray/udreg/2.3.2-4.6/lib64:/opt/cray/pe/libsci/16.09.1/GNU/5.1/x86_64/lib:/opt/cray/pe/mpt/7.4.4/gni/mpich-gnu/5.1/lib
+library_dirs         = @CMAKE_INSTALL_PREFIX@/lib:/opt/cray/rca/2.1.6_g2c60fbf-2.265/lib64:/opt/cray/alps/6.3.4-2.21/lib64:/opt/cray/xpmem/2.1.1_gf9c9084-2.38/lib64:/opt/cray/dmapp/7.1.1-39.37/lib64:/opt/cray/pe/pmi/5.0.10-1.0000.11050.0.0.ari/lib64:/opt/cray/ugni/6.0.15-2.2/lib64:/opt/cray/udreg/2.3.2-7.54/lib64:/opt/cray/pe/mpt/7.4.4/gni/mpich-gnu/5.1/lib
+
 runtime_library_dirs = @CMAKE_INSTALL_PREFIX@/lib:
 extra_compile_args   = @CMAKE_C_FLAGS@
 extra_link_args      =
