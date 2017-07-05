@@ -18,6 +18,7 @@ set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.2)
 set(OPENMPI_SOURCE openmpi-2.0.1)
+set(OPENSSL_SOURCE openssl-1.1.0f)
 set(ZLIB_SOURCE zlib-1.2.8)
 set(HDF5_SOURCE hdf5-1.8.17)
 set(NETCDF_SOURCE netcdf-4.4.1)
@@ -58,6 +59,7 @@ option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
+option(ENABLE_OPENSSL "builds and installs OpenSSL" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
 # the list of enabled dependencies
@@ -223,7 +225,7 @@ else()
 endif()
 
 # zlib
-if (ENABLE_PYTHON OR ENABLE_NETCDF OR ENABLE_LIBXLSXWRITER)
+if (ENABLE_PYTHON OR ENABLE_NETCDF OR ENABLE_LIBXLSXWRITER OR ENABLE_OPENSSL)
     message(STATUS "zlib ................... Enabled")
     ExternalProject_Add(zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -235,6 +237,23 @@ if (ENABLE_PYTHON OR ENABLE_NETCDF OR ENABLE_LIBXLSXWRITER)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "zlib ................... Disabled")
+endif()
+
+# OpenSSL
+if (ENABLE_OPENSSL)
+    message(STATUS "OpenSSL ................ Enabled")
+    list(APPEND teca_deps openssl)
+    ExternalProject_Add(openssl
+        DEPENDS zlib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${OPENSSL_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${OPENSSL_SOURCE}
+        CONFIGURE_COMMAND env ${env}
+             ${PROJECT_BINARY_DIR}/${OPENSSL_SOURCE}/config
+            --prefix=${CMAKE_INSTALL_PREFIX} ${c_flags}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+else()
+    message(STATUS "OpenSSL ................ Disabled")
 endif()
 
 # NetCDF group
