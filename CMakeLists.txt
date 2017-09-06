@@ -55,6 +55,7 @@ option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
+option(ENABLE_READLINE "builds and installs readline" ON)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
@@ -378,6 +379,7 @@ endif()
 
 # Python group
 if (ENABLE_PYTHON)
+    set(py_deps ncurses zlib)
     # ncurses
     message(STATUS "ncurses ................ Enabled")
     ExternalProject_Add(ncurses
@@ -389,20 +391,25 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # readline
-    message(STATUS "readline ............... Enabled")
-    ExternalProject_Add(readline
-        DEPENDS ncurses
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${READLINE_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}/configure
-            --prefix=${CMAKE_INSTALL_PREFIX}
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    if (ENABLE_READLINE)
+        list(APPEND py_deps readline)
+        message(STATUS "readline ............... Enabled")
+        ExternalProject_Add(readline
+            DEPENDS ncurses
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${READLINE_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}
+            CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}/configure
+                --prefix=${CMAKE_INSTALL_PREFIX}
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    else()
+        message(STATUS "readline ............... Disabled")
+    endif()
 
     # Build Python.
     message(STATUS "Python ................. Enabled")
     ExternalProject_Add(Python
-        DEPENDS ncurses readline zlib
+        DEPENDS ${py_deps}
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${PYTHON_SOURCE}.tgz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}
