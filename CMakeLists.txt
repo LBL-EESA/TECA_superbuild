@@ -463,7 +463,11 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build mpi4py if MPI was requested.
-    set(MPI4PY_CONFIG "MPICH" CACHE STRING
+    set(tmp "MPICH")
+    if (DEFINED ENV{NERSC_HOST})
+        set(tmp $ENV{NERSC_HOST})
+    endif()
+    set(MPI4PY_CONFIG ${tmp} CACHE STRING
         "Select the mpi4py configuration we use.")
 
     if (NOT WITHOUT_MPI)
