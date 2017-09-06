@@ -51,6 +51,7 @@ option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
 option(ENABLE_MPICH "builds and installs MPICH MPI" OFF)
 option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" ON)
+option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
@@ -158,6 +159,18 @@ message(STATUS "LDFLAGS=${ld_flags}")
 # Cray builds
 set(mpi_flags)
 if (NOT WITHOUT_MPI AND NOT ENABLE_MPICH AND NOT ENABLE_OPENMPI)
+    if (ENABLE_CRAY_MPICH)
+        # Cray does not follow usual conventions of mpicc, mpicxx, mpif90 etc
+        set(MPI_C_COMPILER ${CMAKE_C_COMPILER} CACHE STRING "C compiler for MPI programs")
+        set(MPI_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE STRING "C++ compiler for MPI programs")
+        # use pkg-config to detect MPI dependencies
+        find_package(PkgConfig QUIET)
+        pkg_check_modules(CRAY_MPICH REQUIRED QUIET mpich)
+        # set variables needed by CMake FindMPI
+        set(MPI_INCLUDE_PATH ${CRAY_MPICH_INCLUDE_DIRS} CACHE STRING "MPI include directories")
+        set(MPI_C_LIBRARIES ${CRAY_MPICH_LDFLAGS} CACHE STRING "MPI link dependencies")
+        set(MPI_CXX_LIBRARIES "" CACHE STRING "MPI C++ dependencies (empty)")
+    endif()
     list(APPEND mpi_flags "-DMPI_CXX_COMPILER=${MPI_CXX_COMPILER}")
     list(APPEND mpi_flags "-DMPI_C_COMPILER=${MPI_C_COMPILER}")
     list(APPEND mpi_flags "-DMPI_CXX_LIBRARIES=")
@@ -173,7 +186,6 @@ message(STATUS "MPI_FLAGS=${MPI_FLAGS}")
 # flags for testing
 set(CTEST_FLAGS  --output-on-failure CACHE STRING
     "flags passed to ctest during tests after install")
-message(STATUS "CTEST_FLAGS=${CTEST_FLAGS}")
 
 # set the build enviornment for autotools builds and Python builds
 # this ensures that python-config works as expected and prevents
@@ -199,9 +211,14 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # Build MPICH if MPI is requested.
-if (NOT WITHOUT_MPI AND ENABLE_MPICH)
-    message(STATUS "mpich .................. Enabled")
-    message(STATUS "openmpi ................ Disabled")
+if (NOT WITHOUT_MPI AND ENABLE_CRAY_MPICH)
+    message(STATUS "MPICH .................. Disabled")
+    message(STATUS "Cray MPICH ............. Enabled")
+    message(STATUS "OpenMPI ................ Disabled")
+elseif (NOT WITHOUT_MPI AND ENABLE_MPICH)
+    message(STATUS "MPICH .................. Enabled")
+    message(STATUS "Cray MPICH ............. Disabled")
+    message(STATUS "OpenMPI ................ Disabled")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${MPICH_SOURCE}.tar.gz
@@ -210,8 +227,9 @@ if (NOT WITHOUT_MPI AND ENABLE_MPICH)
             --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
-    message(STATUS "mpich .................. Disabled")
-    message(STATUS "openmpi ................ Enabled")
+    message(STATUS "MPICH .................. Disabled")
+    message(STATUS "Cray MPICH ............. Disabled")
+    message(STATUS "OpenMPI ................ Enabled")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${OPENMPI_SOURCE}.tar.gz
@@ -220,8 +238,9 @@ elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
             --prefix=${CMAKE_INSTALL_PREFIX} --enable-mpi-thread-multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "mpich .................. Disabled")
-    message(STATUS "openmpi ................ Disabled")
+    message(STATUS "MPICH .................. Disabled")
+    message(STATUS "Cray MPICH ............. Disabled")
+    message(STATUS "OpenMPI ................ Disabled")
 endif()
 
 # zlib
@@ -451,6 +470,11 @@ if (ENABLE_PYTHON)
         set(mpi4py_deps numpy)
         if (ENABLE_MPICH OR ENABLE_OPENMPI)
             list(APPEND mpi4py_deps mpi)
+        endif()
+        if (ENABLE_CRAY_MPICH)
+            # set variables needed by mpi4py
+            string(REPLACE ";" " " MPI4PY_LDFLAGS "${CRAY_MPICH_LDFLAGS}")
+            string(REPLACE ";" " " MPI4PY_CFLAGS "${CRAY_MPICH_CFLAGS}")
         endif()
         configure_file(mpi4py.cfg.in mpi4py.cfg)
         message(STATUS "mpi4py ................. Enabled")
