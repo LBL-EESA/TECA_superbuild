@@ -26,11 +26,11 @@ set(UDUNITS_SOURCE udunits-2.2.20)
 set(BOOST_SOURCE boost_1_64_0)
 set(NCURSES_SOURCE ncurses-6.0)
 set(READLINE_SOURCE readline-6.3)
-set(PYTHON_SOURCE Python-2.7.12)
+set(PYTHON_SOURCE Python-2.7.13)
 set(SETUPTOOLS_SOURCE setuptools-25.1.0)
 set(SWIG_SOURCE swig-3.0.10)
 set(CYTHON_SOURCE Cython-0.24.1)
-set(NUMPY_SOURCE numpy-1.11.1)
+set(NUMPY_SOURCE numpy-1.11.2)
 set(MPI4PY_SOURCE mpi4py-2.0.0)
 set(FREETYPE_SOURCE freetype-2.6)
 set(LIBPNG_SOURCE libpng-1.6.23)
@@ -51,9 +51,11 @@ option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
 option(ENABLE_MPICH "builds and installs MPICH MPI" OFF)
 option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" ON)
+option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
+option(ENABLE_READLINE "builds and installs readline" ON)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
@@ -158,6 +160,18 @@ message(STATUS "LDFLAGS=${ld_flags}")
 # Cray builds
 set(mpi_flags)
 if (NOT WITHOUT_MPI AND NOT ENABLE_MPICH AND NOT ENABLE_OPENMPI)
+    if (ENABLE_CRAY_MPICH)
+        # Cray does not follow usual conventions of mpicc, mpicxx, mpif90 etc
+        set(MPI_C_COMPILER ${CMAKE_C_COMPILER} CACHE STRING "C compiler for MPI programs")
+        set(MPI_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE STRING "C++ compiler for MPI programs")
+        # use pkg-config to detect MPI dependencies
+        find_package(PkgConfig QUIET)
+        pkg_check_modules(CRAY_MPICH REQUIRED QUIET mpich)
+        # set variables needed by CMake FindMPI
+        set(MPI_INCLUDE_PATH ${CRAY_MPICH_INCLUDE_DIRS} CACHE STRING "MPI include directories")
+        set(MPI_C_LIBRARIES ${CRAY_MPICH_LDFLAGS} CACHE STRING "MPI link dependencies")
+        set(MPI_CXX_LIBRARIES "" CACHE STRING "MPI C++ dependencies (empty)")
+    endif()
     list(APPEND mpi_flags "-DMPI_CXX_COMPILER=${MPI_CXX_COMPILER}")
     list(APPEND mpi_flags "-DMPI_C_COMPILER=${MPI_C_COMPILER}")
     list(APPEND mpi_flags "-DMPI_CXX_LIBRARIES=")
@@ -173,7 +187,6 @@ message(STATUS "MPI_FLAGS=${MPI_FLAGS}")
 # flags for testing
 set(CTEST_FLAGS  --output-on-failure CACHE STRING
     "flags passed to ctest during tests after install")
-message(STATUS "CTEST_FLAGS=${CTEST_FLAGS}")
 
 # set the build enviornment for autotools builds and Python builds
 # this ensures that python-config works as expected and prevents
@@ -199,9 +212,14 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/teca_env.sh
     DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
 # Build MPICH if MPI is requested.
-if (NOT WITHOUT_MPI AND ENABLE_MPICH)
-    message(STATUS "mpich .................. Enabled")
-    message(STATUS "openmpi ................ Disabled")
+if (NOT WITHOUT_MPI AND ENABLE_CRAY_MPICH)
+    message(STATUS "MPICH .................. Disabled")
+    message(STATUS "Cray MPICH ............. Enabled")
+    message(STATUS "OpenMPI ................ Disabled")
+elseif (NOT WITHOUT_MPI AND ENABLE_MPICH)
+    message(STATUS "MPICH .................. Enabled")
+    message(STATUS "Cray MPICH ............. Disabled")
+    message(STATUS "OpenMPI ................ Disabled")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${MPICH_SOURCE}.tar.gz
@@ -210,8 +228,9 @@ if (NOT WITHOUT_MPI AND ENABLE_MPICH)
             --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
-    message(STATUS "mpich .................. Disabled")
-    message(STATUS "openmpi ................ Enabled")
+    message(STATUS "MPICH .................. Disabled")
+    message(STATUS "Cray MPICH ............. Disabled")
+    message(STATUS "OpenMPI ................ Enabled")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${OPENMPI_SOURCE}.tar.gz
@@ -220,8 +239,9 @@ elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
             --prefix=${CMAKE_INSTALL_PREFIX} --enable-mpi-thread-multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "mpich .................. Disabled")
-    message(STATUS "openmpi ................ Disabled")
+    message(STATUS "MPICH .................. Disabled")
+    message(STATUS "Cray MPICH ............. Disabled")
+    message(STATUS "OpenMPI ................ Disabled")
 endif()
 
 # zlib
@@ -300,7 +320,7 @@ if (ENABLE_NETCDF)
            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
            -DENABLE_NETCDF4=ON -DENABLE_TESTS=OFF -DBUILD_EXAMPLES=OFF
-           -DNC_HAVE_PARALLEL_HDF5=OFF -DHDF5_IS_PARALLEL=OFF
+           -DNC_HAVE_PARALLEL_HDF5=OFF -DHDF5_IS_PARALLEL=OFF -DENABLE_DAP=OFF
            -DHDF5_INCLUDE_DIR=${CMAKE_INSTALL_PREFIX}/include
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
@@ -359,6 +379,7 @@ endif()
 
 # Python group
 if (ENABLE_PYTHON)
+    set(py_deps ncurses zlib)
     # ncurses
     message(STATUS "ncurses ................ Enabled")
     ExternalProject_Add(ncurses
@@ -370,20 +391,25 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # readline
-    message(STATUS "readline ............... Enabled")
-    ExternalProject_Add(readline
-        DEPENDS ncurses
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${READLINE_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}/configure
-            --prefix=${CMAKE_INSTALL_PREFIX}
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    if (ENABLE_READLINE)
+        list(APPEND py_deps readline)
+        message(STATUS "readline ............... Enabled")
+        ExternalProject_Add(readline
+            DEPENDS ncurses
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${READLINE_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}
+            CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${READLINE_SOURCE}/configure
+                --prefix=${CMAKE_INSTALL_PREFIX}
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    else()
+        message(STATUS "readline ............... Disabled")
+    endif()
 
     # Build Python.
     message(STATUS "Python ................. Enabled")
     ExternalProject_Add(Python
-        DEPENDS ncurses readline zlib
+        DEPENDS ${py_deps}
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${PYTHON_SOURCE}.tgz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}
@@ -444,13 +470,22 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build mpi4py if MPI was requested.
-    set(MPI4PY_CONFIG "MPICH" CACHE STRING
+    set(tmp "MPICH")
+    if (DEFINED ENV{NERSC_HOST})
+        set(tmp $ENV{NERSC_HOST})
+    endif()
+    set(MPI4PY_CONFIG ${tmp} CACHE STRING
         "Select the mpi4py configuration we use.")
 
     if (NOT WITHOUT_MPI)
         set(mpi4py_deps numpy)
         if (ENABLE_MPICH OR ENABLE_OPENMPI)
             list(APPEND mpi4py_deps mpi)
+        endif()
+        if (ENABLE_CRAY_MPICH)
+            # set variables needed by mpi4py
+            string(REPLACE ";" " " MPI4PY_LDFLAGS "${CRAY_MPICH_LDFLAGS}")
+            string(REPLACE ";" " " MPI4PY_CFLAGS "${CRAY_MPICH_CFLAGS}")
         endif()
         configure_file(mpi4py.cfg.in mpi4py.cfg)
         message(STATUS "mpi4py ................. Enabled")
@@ -620,17 +655,17 @@ if (ENABLE_PYTHON)
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
-        else()
-            message(STATUS "libpng ................. Disabled")
-            message(STATUS "freetype ............... Disabled")
-            message(STATUS "six .................... Disabled")
-            message(STATUS "python_dateutil ........ Disabled")
-            message(STATUS "pyparsing .............. Disabled")
-            message(STATUS "cycler ................. Disabled")
-            message(STATUS "pytz ................... Disabled")
-            message(STATUS "subprocess32 ........... Disabled")
-            message(STATUS "matplotlib ............. Disabled")
-        endif()
+    else()
+        message(STATUS "libpng ................. Disabled")
+        message(STATUS "freetype ............... Disabled")
+        message(STATUS "six .................... Disabled")
+        message(STATUS "python_dateutil ........ Disabled")
+        message(STATUS "pyparsing .............. Disabled")
+        message(STATUS "cycler ................. Disabled")
+        message(STATUS "pytz ................... Disabled")
+        message(STATUS "subprocess32 ........... Disabled")
+        message(STATUS "matplotlib ............. Disabled")
+    endif()
 else()
     message(STATUS "Python ................. Disabled")
     message(STATUS "setuptools ............. Disabled")
