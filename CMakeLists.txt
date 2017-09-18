@@ -43,7 +43,7 @@ set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 2.1.1 CACHE STRING
+set(TECA_SOURCE 2.1.2 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -723,7 +723,8 @@ if (ENABLE_TECA)
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r24")
         set(TECA_DATA_UPDATE "")
-    elseif (TECA_SOURCE STREQUAL "2.1.0" OR TECA_SOURCE STREQUAL "2.1.1")
+    elseif (TECA_SOURCE STREQUAL "2.1.0" OR TECA_SOURCE STREQUAL "2.1.1"
+	OR TECA_SOURCE STREQUAL "2.1.2")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r34")
         set(TECA_DATA_UPDATE "")
