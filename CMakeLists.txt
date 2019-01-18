@@ -24,13 +24,13 @@ set(HDF5_SOURCE hdf5-1.8.17)
 set(NETCDF_SOURCE netcdf-4.4.1)
 set(UDUNITS_SOURCE udunits-2.2.20)
 set(BOOST_SOURCE boost_1_64_0)
-set(NCURSES_SOURCE ncurses-6.0)
+set(NCURSES_SOURCE ncurses-6.1)
 set(READLINE_SOURCE readline-6.3)
-set(PYTHON_SOURCE Python-2.7.13)
+set(PYTHON_SOURCE Python-2.7.15)
 set(SETUPTOOLS_SOURCE setuptools-25.1.0)
 set(SWIG_SOURCE swig-3.0.12)
 set(CYTHON_SOURCE Cython-0.24.1)
-set(NUMPY_SOURCE numpy-1.11.2)
+set(NUMPY_SOURCE numpy-1.16.0)
 set(MPI4PY_SOURCE mpi4py-2.0.0)
 set(FREETYPE_SOURCE freetype-2.6)
 set(LIBPNG_SOURCE libpng-1.6.23)
@@ -270,7 +270,7 @@ if (ENABLE_OPENSSL)
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${OPENSSL_SOURCE}
         CONFIGURE_COMMAND env ${env}
              ${PROJECT_BINARY_DIR}/${OPENSSL_SOURCE}/config
-            --prefix=${CMAKE_INSTALL_PREFIX} ${c_flags}
+            enable-ssl3 enable-ssl3-method --prefix=${CMAKE_INSTALL_PREFIX} ${c_flags}
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "OpenSSL ................ Disabled")
