@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(TECA_3rdparty)
+project(TECA_superbuild)
 include(ExternalProject)
 
 # where various resources are housed and served
@@ -43,7 +43,7 @@ set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 2.1.2 CACHE STRING
+set(TECA_SOURCE 2.1.3 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -464,8 +464,9 @@ if (ENABLE_PYTHON)
         URL ${TECA_DEPS_URL}/${NUMPY_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NUMPY_SOURCE}
         CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+        BUILD_COMMAND env ${env} NPY_DISTUTILS_APPEND_FLAGS=1
+           ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build install
+           "--prefix=${CMAKE_INSTALL_PREFIX}"
         INSTALL_COMMAND ""
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
@@ -724,7 +725,7 @@ if (ENABLE_TECA)
         set(TECA_DATA_REV "-r24")
         set(TECA_DATA_UPDATE "")
     elseif (TECA_SOURCE STREQUAL "2.1.0" OR TECA_SOURCE STREQUAL "2.1.1"
-	OR TECA_SOURCE STREQUAL "2.1.2")
+	OR TECA_SOURCE STREQUAL "2.1.2" OR TECA_SOURCE STREQUAL "2.1.3")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r34")
         set(TECA_DATA_UPDATE "")
