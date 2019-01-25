@@ -20,8 +20,8 @@ set(MPICH_SOURCE mpich-3.2)
 set(OPENMPI_SOURCE openmpi-3.0.0)
 set(OPENSSL_SOURCE openssl-1.1.0f)
 set(ZLIB_SOURCE zlib-1.2.11)
-set(HDF5_SOURCE hdf5-1.8.17)
-set(NETCDF_SOURCE netcdf-4.4.1)
+set(HDF5_SOURCE hdf5-1.10.4)
+set(NETCDF_SOURCE netcdf-4.6.2)
 set(UDUNITS_SOURCE udunits-2.2.20)
 set(BOOST_SOURCE boost_1_69_0)
 set(NCURSES_SOURCE ncurses-6.1)
@@ -279,10 +279,10 @@ endif()
 # NetCDF group
 if (ENABLE_NETCDF)
     # Build the HDF5 parallel I/O library.
+    # for thread safety add: --enable-unsupported --enable-threadsafe
     message(STATUS "HDF5 ................... Enabled")
     set(hdf5_deps zlib)
-    set(HDF5_CONFIG_FLAGS --enable-unsupported  --enable-hl
-        --enable-threadsafe --enable-production)
+    set(HDF5_CONFIG_FLAGS --enable-hl --enable-build-mode=production)
     # unfortunately hdf5's configure script provides no way to set path
     # to mpi libraries. for now we'll disable parallel hdf5
     #if (NOT WITHOUT_MPI)
