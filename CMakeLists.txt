@@ -43,7 +43,7 @@ set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
 set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
 set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 2.1.3 CACHE STRING
+set(TECA_SOURCE 2.2.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -725,7 +725,8 @@ if (ENABLE_TECA)
         set(TECA_DATA_REV "-r24")
         set(TECA_DATA_UPDATE "")
     elseif (TECA_SOURCE STREQUAL "2.1.0" OR TECA_SOURCE STREQUAL "2.1.1"
-	OR TECA_SOURCE STREQUAL "2.1.2" OR TECA_SOURCE STREQUAL "2.1.3")
+	    OR TECA_SOURCE STREQUAL "2.1.2" OR TECA_SOURCE STREQUAL "2.1.3"
+        OR TECA_SOURCE STREQUAL "2.2.0")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r34")
         set(TECA_DATA_UPDATE "")
@@ -767,7 +768,7 @@ if (ENABLE_TECA)
             "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
             "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-            ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
+            ${MPI_FLAGS} -DTECA_HAS_VTK=OFF -DTECA_PYTHON_VERSION=2
             -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
