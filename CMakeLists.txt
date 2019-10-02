@@ -16,34 +16,32 @@ set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
 set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 
 # The following versions of each library are installed by this script:
-set(MPICH_SOURCE mpich-3.2)
-set(OPENMPI_SOURCE openmpi-3.0.0)
-set(OPENSSL_SOURCE openssl-1.1.0f)
+set(MPICH_SOURCE mpich-3.3.1)
+set(OPENMPI_SOURCE openmpi-4.0.1)
+set(OPENSSL_SOURCE openssl-1.1.1d)
 set(ZLIB_SOURCE zlib-1.2.11)
-set(HDF5_SOURCE hdf5-1.10.4)
-set(NETCDF_SOURCE netcdf-4.6.2)
-set(UDUNITS_SOURCE udunits-2.2.20)
+set(HDF5_SOURCE hdf5-1.10.5)
+set(NETCDF_SOURCE netcdf-c-4.7.1)
+set(UDUNITS_SOURCE udunits-2.2.26)
 set(BOOST_SOURCE boost_1_69_0)
 set(NCURSES_SOURCE ncurses-6.1)
-set(READLINE_SOURCE readline-6.3)
-set(PYTHON_SOURCE Python-2.7.15)
-set(SETUPTOOLS_SOURCE setuptools-25.1.0)
-set(SWIG_SOURCE swig-3.0.12)
-set(CYTHON_SOURCE Cython-0.24.1)
-set(NUMPY_SOURCE numpy-1.16.0)
-set(MPI4PY_SOURCE mpi4py-2.0.0)
-set(FREETYPE_SOURCE freetype-2.6)
-set(LIBPNG_SOURCE libpng-1.6.23)
-set(SIX_SOURCE six-1.10.0)
-set(PYTHON_DATEUTIL_SOURCE python-dateutil-2.5.3)
-set(PYPARSING_SOURCE pyparsing-2.1.9)
+set(READLINE_SOURCE readline-8.0)
+set(PYTHON_SOURCE Python-3.7.4)
+set(SETUPTOOLS_SOURCE setuptools-41.2.0)
+set(SWIG_SOURCE swig-4.0.1)
+set(CYTHON_SOURCE Cython-0.29.13)
+set(NUMPY_SOURCE numpy-1.17.2)
+set(MPI4PY_SOURCE mpi4py-3.0.2)
+set(FREETYPE_SOURCE freetype-2.10.1)
+set(LIBPNG_SOURCE libpng-1.6.37)
+set(PYTHON_DATEUTIL_SOURCE python-dateutil-2.8.0)
+set(PYPARSING_SOURCE pyparsing-2.4.2)
 set(CYCLER_SOURCE cycler-0.10.0)
-set(PYTZ_SOURCE pytz-2016.6.1)
-set(SUBPROCESS32_SOURCE subprocess32-3.2.7)
-set(FUNCTOOLS32_SOURCE functools32-3.2.3-2)
-set(MATPLOTLIB_SOURCE matplotlib-2.0.0b3)
+set(PYTZ_SOURCE pytz-2019.2)
+set(KIWISOLVER_SOURCE kiwisolver-1.1.0)
+set(MATPLOTLIB_SOURCE matplotlib-3.1.1)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 2.2.0 CACHE STRING
+set(TECA_SOURCE 2.2.2 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -195,7 +193,7 @@ set(CTEST_FLAGS  --output-on-failure CACHE STRING
 set(py_env)
 if (ENABLE_PYTHON)
     set(py_env PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg
-        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python2.7/site-packages/)
+        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python3.7/site-packages/)
 endif()
 set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     "CPPFLAGS=${cpp_flags}" "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" "LDFLAGS=${ld_flags}"
@@ -414,7 +412,7 @@ if (ENABLE_PYTHON)
         URL ${TECA_DEPS_URL}/${PYTHON_SOURCE}.tgz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}/configure
-          --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
+            --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build setuptools
@@ -422,10 +420,10 @@ if (ENABLE_PYTHON)
     ExternalProject_Add(setuptools
         DEPENDS Python
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${SETUPTOOLS_SOURCE}.tar.gz
+        URL ${TECA_DEPS_URL}/${SETUPTOOLS_SOURCE}.zip
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${SETUPTOOLS_SOURCE}
         CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
             setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
         INSTALL_COMMAND ""
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
@@ -439,18 +437,18 @@ if (ENABLE_PYTHON)
         DEPENDS Python
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}/configure
-            --with-python=${CMAKE_INSTALL_PREFIX}/bin/python --prefix=${CMAKE_INSTALL_PREFIX}
+            --with-python=${CMAKE_INSTALL_PREFIX}/bin/python3 --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Cython.
     message(STATUS "Cython ................. Enabled")
     ExternalProject_Add(Cython
-        DEPENDS Python
+        DEPENDS setuptools
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${CYTHON_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYTHON_SOURCE}
         CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
             setup.py build install --prefix=${CMAKE_INSTALL_PREFIX}
         INSTALL_COMMAND ""
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
@@ -459,13 +457,13 @@ if (ENABLE_PYTHON)
     message(STATUS "NumPy .................. Enabled")
     list(APPEND teca_deps numpy)
     ExternalProject_Add(numpy
-        DEPENDS Python Cython setuptools
+        DEPENDS Cython setuptools
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NUMPY_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NUMPY_SOURCE}
         CONFIGURE_COMMAND ""
         BUILD_COMMAND env ${env} NPY_DISTUTILS_APPEND_FLAGS=1
-           ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build install
+           ${CMAKE_INSTALL_PREFIX}/bin/python3 setup.py build install
            "--prefix=${CMAKE_INSTALL_PREFIX}"
         INSTALL_COMMAND ""
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
@@ -479,7 +477,7 @@ if (ENABLE_PYTHON)
         "Select the mpi4py configuration we use.")
 
     if (NOT WITHOUT_MPI)
-        set(mpi4py_deps numpy)
+        set(mpi4py_deps setuptools numpy)
         if (ENABLE_MPICH OR ENABLE_OPENMPI)
             list(APPEND mpi4py_deps mpi)
         endif()
@@ -498,10 +496,10 @@ if (ENABLE_PYTHON)
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${MPI4PY_SOURCE}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env}
-                ${CMAKE_INSTALL_PREFIX}/bin/python setup.py build
+                ${CMAKE_INSTALL_PREFIX}/bin/python3 setup.py build
                 --mpi=${MPI4PY_CONFIG},${PROJECT_BINARY_DIR}/mpi4py.cfg
             INSTALL_COMMAND env ${env}
-                ${CMAKE_INSTALL_PREFIX}/bin/python setup.py
+                ${CMAKE_INSTALL_PREFIX}/bin/python3 setup.py
             install --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1 LOG_INSTALL 1)
     else()
@@ -547,28 +545,15 @@ if (ENABLE_PYTHON)
                 --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-        # six
-        message(STATUS "six .................... Enabled")
-        ExternalProject_Add(six
-            DEPENDS setuptools
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${SIX_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SIX_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
         # python_dateutil
         message(STATUS "python_dateutil ........ Enabled")
         ExternalProject_Add(python_dateutil
-            DEPENDS six
+            DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${PYTHON_DATEUTIL_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_DATEUTIL_SOURCE}
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
@@ -581,7 +566,7 @@ if (ENABLE_PYTHON)
             URL ${TECA_DEPS_URL}/${PYPARSING_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYPARSING_SOURCE}
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
@@ -589,12 +574,12 @@ if (ENABLE_PYTHON)
         # cycler
         message(STATUS "cycler ................. Enabled")
         ExternalProject_Add(cycler
-            DEPENDS six
+            DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${CYCLER_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYCLER_SOURCE}
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
@@ -607,64 +592,51 @@ if (ENABLE_PYTHON)
             URL ${TECA_DEPS_URL}/${PYTZ_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTZ_SOURCE}
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-        # subprocess32
-        message(STATUS "subprocess32 ........... Enabled")
-        ExternalProject_Add(subprocess32
+        # kiwisolver
+        message(STATUS "kiwisolver ............. Enabled")
+        ExternalProject_Add(kiwisolver
             DEPENDS setuptools
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${SUBPROCESS32_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SUBPROCESS32_SOURCE}
+            URL ${TECA_DEPS_URL}/${KIWISOLVER_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${KIWISOLVER_SOURCE}
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # functools32
-        message(STATUS "functools32 ............ Enabled")
-        ExternalProject_Add(functools32
-            DEPENDS setuptools
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${FUNCTOOLS32_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${FUNCTOOLS32_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
+            INSTALL_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/pip3 install kiwisolver
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
         # Build matplotlib
         message(STATUS "matplotlib ............. Enabled")
         list(APPEND teca_deps matplotlib)
-        set(matplotlib_deps numpy freetype pyparsing python_dateutil
-            cycler pytz subprocess32 functools32)
+        set(matplotlib_deps setuptools numpy freetype pyparsing
+            python_dateutil cycler pytz kiwisolver)
         if (NOT system_libpng)
             list(APPEND matplotlib_deps libpng)
         endif()
         ExternalProject_Add(matplotlib
-            DEPENDS Python numpy ${matplotlib_deps}
+            DEPENDS Python ${matplotlib_deps}
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${MATPLOTLIB_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${MATPLOTLIB_SOURCE}
             CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
                 setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
         message(STATUS "libpng ................. Disabled")
         message(STATUS "freetype ............... Disabled")
-        message(STATUS "six .................... Disabled")
         message(STATUS "python_dateutil ........ Disabled")
         message(STATUS "pyparsing .............. Disabled")
         message(STATUS "cycler ................. Disabled")
         message(STATUS "pytz ................... Disabled")
-        message(STATUS "subprocess32 ........... Disabled")
+        message(STATUS "kiwisolver ............. Disabled")
         message(STATUS "matplotlib ............. Disabled")
     endif()
 else()
@@ -676,13 +648,11 @@ else()
     message(STATUS "mpi4py ................. Disabled")
     message(STATUS "libpng ................. Disabled")
     message(STATUS "freetype ............... Disabled")
-    message(STATUS "six .................... Disabled")
     message(STATUS "python_dateutil ........ Disabled")
     message(STATUS "pyparsing .............. Disabled")
     message(STATUS "cycler ................. Disabled")
     message(STATUS "pytz ................... Disabled")
-    message(STATUS "subprocess32 ........... Disabled")
-    message(STATUS "functools32 ............ Disabled")
+    message(STATUS "kiwisolver ............. Disabled")
     message(STATUS "matplotlib ............. Disabled")
 endif()
 
@@ -726,7 +696,7 @@ if (ENABLE_TECA)
         set(TECA_DATA_UPDATE "")
     elseif (TECA_SOURCE STREQUAL "2.1.0" OR TECA_SOURCE STREQUAL "2.1.1"
 	    OR TECA_SOURCE STREQUAL "2.1.2" OR TECA_SOURCE STREQUAL "2.1.3"
-        OR TECA_SOURCE STREQUAL "2.2.0")
+        OR TECA_SOURCE STREQUAL "2.2.0" OR TECA_SOURCE STREQUAL "2.2.2")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r34")
         set(TECA_DATA_UPDATE "")
@@ -768,7 +738,7 @@ if (ENABLE_TECA)
             "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
             "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-            ${MPI_FLAGS} -DTECA_HAS_VTK=OFF -DTECA_PYTHON_VERSION=2
+            ${MPI_FLAGS} -DTECA_HAS_VTK=OFF -DTECA_PYTHON_VERSION=3
             -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
