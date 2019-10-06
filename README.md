@@ -1,11 +1,10 @@
 # TECA Superbuild
 The TECA superbuild contains build scripts for [TECA](https://github.com/LBL-EESA/TECA)
-and all of its 3rd-party dependencies. This project provides an easy way to get all
-of TECA's dependencies and insure that NetCDF and HDF5 are built thread-safe.
+and all of its 3rd-party dependencies. This project provides an easy way to get all of TECA's dependencies and insure that NetCDF and HDF5 are built thread-safe making it safe to use.
 
 ## Quick Start
 To build the latest released version of TECA including all of its
-dependencies.
+dependencies.Start from here.
 
 ```bash
 $ git clone https://github.com/LBL-EESA/TECA_superbuild.git
@@ -56,3 +55,4 @@ ENABLE_MATPLOTLIB "builds and installs mnatplotlib group" ON
 ENABLE_UDUNITS "builds and installs UDUNITS" ON
 ENABLE_TECA "builds and installs TECA" ON
 ```
+Happy using TECA.
