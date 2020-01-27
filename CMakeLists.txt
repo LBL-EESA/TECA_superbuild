@@ -41,7 +41,7 @@ set(PYTZ_SOURCE pytz-2019.2)
 set(KIWISOLVER_SOURCE kiwisolver-1.1.0)
 set(MATPLOTLIB_SOURCE matplotlib-3.1.1)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 2.2.2 CACHE STRING
+set(TECA_SOURCE 3.0.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -699,6 +699,10 @@ if (ENABLE_TECA)
         OR TECA_SOURCE STREQUAL "2.2.0" OR TECA_SOURCE STREQUAL "2.2.2")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r34")
+        set(TECA_DATA_UPDATE "")
+    elseif (TECA_SOURCE STREQUAL "3.0.0")
+        set(TECA_UPDATE "")
+        set(TECA_DATA_REV "-r49")
         set(TECA_DATA_UPDATE "")
     endif()
     set(tmp)
