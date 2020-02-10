@@ -64,6 +64,7 @@ option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
 # the list of enabled dependencies
 set(teca_deps)
+set(teca_flags)
 
 message(STATUS "C compiler is ${CMAKE_C_COMPILER} (${CMAKE_C_COMPILER_ID})")
 message(STATUS "C++ compiler is ${CMAKE_CXX_COMPILER} (${CMAKE_CXX_COMPILER_ID})")
@@ -159,16 +160,14 @@ message(STATUS "LDFLAGS=${ld_flags}")
 set(mpi_flags)
 if (NOT WITHOUT_MPI AND NOT ENABLE_MPICH AND NOT ENABLE_OPENMPI)
     if (ENABLE_CRAY_MPICH)
-        # Cray does not follow usual conventions of mpicc, mpicxx, mpif90 etc
-        set(MPI_C_COMPILER ${CMAKE_C_COMPILER} CACHE STRING "C compiler for MPI programs")
-        set(MPI_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE STRING "C++ compiler for MPI programs")
         # use pkg-config to detect MPI dependencies
+        set(ENV{PKG_CONFIG_PATH} "$ENV{CRAY_MPICH_DIR}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
         find_package(PkgConfig QUIET)
         pkg_check_modules(CRAY_MPICH REQUIRED QUIET mpich)
-        # set variables needed by CMake FindMPI
-        set(MPI_INCLUDE_PATH ${CRAY_MPICH_INCLUDE_DIRS} CACHE STRING "MPI include directories")
+        set(MPI_C_INCLUDE_PATH ${CRAY_MPICH_INCLUDE_DIRS} CACHE STRING "MPI include directories")
         set(MPI_C_LIBRARIES ${CRAY_MPICH_LDFLAGS} CACHE STRING "MPI link dependencies")
-        set(MPI_CXX_LIBRARIES "" CACHE STRING "MPI C++ dependencies (empty)")
+        set(MPIEXEC srun CACHE STRING "Platform MPI run equivalent")
+        set(MPI_C_FOUND CACHE BOOL ON "status of MPI config")
     endif()
     list(APPEND mpi_flags "-DMPI_CXX_COMPILER=${MPI_CXX_COMPILER}")
     list(APPEND mpi_flags "-DMPI_C_COMPILER=${MPI_C_COMPILER}")
@@ -214,10 +213,13 @@ if (NOT WITHOUT_MPI AND ENABLE_CRAY_MPICH)
     message(STATUS "MPICH .................. Disabled")
     message(STATUS "Cray MPICH ............. Enabled")
     message(STATUS "OpenMPI ................ Disabled")
+    list(APPEND teca_flags "-DENABLE_CRAY_MPICH=ON")
+    list(APPEND teca_flags "-DREQUIRE_MPI=TRUE")
 elseif (NOT WITHOUT_MPI AND ENABLE_MPICH)
     message(STATUS "MPICH .................. Enabled")
     message(STATUS "Cray MPICH ............. Disabled")
     message(STATUS "OpenMPI ................ Disabled")
+    list(APPEND teca_flags "-DREQUIRE_MPI=TRUE")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${MPICH_SOURCE}.tar.gz
@@ -229,6 +231,7 @@ elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
     message(STATUS "MPICH .................. Disabled")
     message(STATUS "Cray MPICH ............. Disabled")
     message(STATUS "OpenMPI ................ Enabled")
+    list(APPEND teca_flags "-DREQUIRE_MPI=TRUE")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${OPENMPI_SOURCE}.tar.gz
@@ -261,6 +264,7 @@ endif()
 if (ENABLE_OPENSSL)
     message(STATUS "OpenSSL ................ Enabled")
     list(APPEND teca_deps openssl)
+    list(APPEND teca_flags "-DREQUIRE_OPENSSL=TRUE")
     ExternalProject_Add(openssl
         DEPENDS zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -301,6 +305,7 @@ if (ENABLE_NETCDF)
     # Build NetCDF.
     message(STATUS "NetCDF ................. Enabled")
     list(APPEND teca_deps netcdf)
+    list(APPEND teca_flags "-DREQUIRE_NETCDF=TRUE")
     ExternalProject_Add(netcdf
         DEPENDS hdf5
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -330,6 +335,7 @@ endif()
 if (ENABLE_UDUNITS)
     message(STATUS "UDUNITS ................ Enabled")
     list(APPEND teca_deps udunits)
+    list(APPEND teca_flags "-DREQUIRE_UDUNITS=TRUE")
     ExternalProject_Add(udunits
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${UDUNITS_SOURCE}.tar.gz
@@ -354,6 +360,7 @@ endif()
 if (ENABLE_BOOST)
     message(STATUS "Boost .................. Enabled")
     list(APPEND teca_deps boost)
+    list(APPEND teca_flags "-DREQUIRE_BOOST=TRUE")
     if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
         (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")))
         set(boost_toolset toolset=clang)
@@ -406,6 +413,7 @@ if (ENABLE_PYTHON)
 
     # Build Python.
     message(STATUS "Python ................. Enabled")
+    list(APPEND teca_flags "-DREQUIRE_PYTHON=TRUE")
     ExternalProject_Add(Python
         DEPENDS ${py_deps}
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -660,6 +668,7 @@ endif()
 if (ENABLE_LIBXLSXWRITER)
     message(STATUS "LIBXLSXWRITER .......... Enabled")
     list(APPEND teca_deps libxlsxwriter zlib)
+    list(APPEND teca_flags "-DREQUIRE_LIBXLSXWRITE=TRUE")
     ExternalProject_Add(libxlsxwriter
         DEPENDS zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -686,6 +695,7 @@ endif()
 # TECA proper
 if (ENABLE_TECA)
     message(STATUS "TECA ................... Enabled")
+
     # download the regression test data
     set(TECA_DATA_REV "-rHEAD")
     set(TECA_DATA_UPDATE svn update)
@@ -725,6 +735,7 @@ if (ENABLE_TECA)
     else()
         message(STATUS "TECA test .............. Disabled")
     endif()
+
     # download and build TECA
     ExternalProject_Add(TECA
         DEPENDS ${teca_deps}
@@ -742,8 +753,8 @@ if (ENABLE_TECA)
             "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
             "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-            ${MPI_FLAGS} -DTECA_HAS_VTK=OFF -DTECA_PYTHON_VERSION=3
-            -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
+            ${teca_flags} ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
+            -DTECA_PYTHON_VERSION=3 -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
