@@ -7,10 +7,10 @@ include(ExternalProject)
 set(TECA_URL "http://github.com/LBL-EESA/TECA"
     CACHE STRING "URL to the TECA source code repository")
 
-set(TECA_DATA_URL "svn://missmarple.lbl.gov/work3/teca/TECA_data"
+set(TECA_DATA_URL "svn://svn.code.sf.net/p/teca/TECA_data"
     CACHE STRING "URL to the TECA regresion test data repository")
 
-set(TECA_DEPS_URL "http://missmarple.lbl.gov/TECA/TECA_deps"
+set(TECA_DEPS_URL "https://sourceforge.net/projects/teca/files/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
 set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
