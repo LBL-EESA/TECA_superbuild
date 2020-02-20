@@ -1,0 +1,68 @@
+# This configuration file is used by Travis CI to build/test TECA.
+language: c++
+sudo: required
+
+services:
+  - docker
+
+os:
+  - linux
+  - osx
+
+env:
+  global:
+    - BUILD_TYPE=Debug
+    - TECA_DIR=/travis_teca_dir
+    - TECA_PYTHON_VERSION=3
+    - TECA_DATA_REVISION=49
+  matrix:
+    - DOCKER_IMAGE=ubuntu IMAGE_VERSION=18.04 IMAGE_NAME=ubuntu_18_04
+    - DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
+    - NO_DOCKER=TRUE
+
+matrix:
+  exclude:
+    - os: osx
+      env: DOCKER_IMAGE=ubuntu IMAGE_VERSION=18.04 IMAGE_NAME=ubuntu_18_04
+    - os: osx
+      env: DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
+    - os: linux
+      env: NO_DOCKER=TRUE
+
+before_install:
+  - >
+    if [[ "${TRAVIS_OS_NAME}" == "linux" ]];
+    then
+    docker pull ${DOCKER_IMAGE}:${IMAGE_VERSION} &&
+    docker run -t -v ${TRAVIS_BUILD_DIR}:${TECA_DIR} -w ${TECA_DIR}
+    --name teca_${DOCKER_IMAGE}_${IMAGE_VERSION} -d ${DOCKER_IMAGE}:${IMAGE_VERSION};
+    fi
+
+install:
+  - >
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]];
+    then
+    ./test/travis_ci/install_osx.sh;
+    elif [[ "$TRAVIS_OS_NAME" == "linux" ]];
+    then
+    docker exec teca_${DOCKER_IMAGE}_${IMAGE_VERSION} /bin/bash -c
+    "export TECA_PYTHON_VERSION=${TECA_PYTHON_VERSION} &&
+    export TECA_DATA_REVISION=${TECA_DATA_REVISION} &&
+    ${TECA_DIR}/test/travis_ci/install_${IMAGE_NAME}.sh";
+    fi
+
+script:
+  - >
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]];
+    then
+    ./test/travis_ci/ctest_osx.sh;
+    elif [[ "${TRAVIS_OS_NAME}" == "linux" ]];
+    then
+    docker exec teca_${DOCKER_IMAGE}_${IMAGE_VERSION} /bin/bash -c
+    "export TRAVIS_BRANCH=${TRAVIS_BRANCH} &&
+    export TECA_PYTHON_VERSION=${TECA_PYTHON_VERSION} &&
+    export BUILD_TYPE=${BUILD_TYPE} &&
+    export DOCKER_IMAGE=${DOCKER_IMAGE} &&
+    export IMAGE_VERSION=${IMAGE_VERSION} &&
+    ${TECA_DIR}/test/travis_ci/ctest_linux.sh";
+    fi
