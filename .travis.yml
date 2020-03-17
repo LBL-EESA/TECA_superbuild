@@ -10,12 +10,16 @@ os:
 #  - osx
 
 env:
-  global:
-    - BUILD_TYPE=Debug
-    - TECA_SUPERBUILD_DIR=/travis_teca_superbuild_dir
-  matrix:
+  - BUILD_TYPE=Debug
+  - TECA_SUPERBUILD_DIR=/travis_teca_superbuild_dir
+  - DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
+#  global:
+#    - BUILD_TYPE=Debug
+#    - TECA_SUPERBUILD_DIR=/travis_teca_superbuild_dir
+#    - DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
+#  matrix:
 #    - DOCKER_IMAGE=ubuntu IMAGE_VERSION=18.04 IMAGE_NAME=ubuntu_18_04
-    - DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
+#    - DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
 #    - NO_DOCKER=TRUE
 
 #matrix:
@@ -38,10 +42,6 @@ before_install:
 
 install:
   - >
-#    if [[ "${TRAVIS_OS_NAME}" == "osx" ]];
-#    then
-#    ./test/travis_ci/install_osx.sh;
-#    elif [[ "$TRAVIS_OS_NAME" == "linux" ]];
     if [[ "$TRAVIS_OS_NAME" == "linux" ]];
     then
     docker exec teca_${DOCKER_IMAGE}_${IMAGE_VERSION} /bin/bash -c
@@ -50,10 +50,6 @@ install:
 
 script:
   - >
-#    if [[ "${TRAVIS_OS_NAME}" == "osx" ]];
-#    then
-#    ./test/travis_ci/ctest_osx.sh;
-#    elif [[ "${TRAVIS_OS_NAME}" == "linux" ]];
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]];
     then
     docker exec teca_${DOCKER_IMAGE}_${IMAGE_VERSION} /bin/bash -c
