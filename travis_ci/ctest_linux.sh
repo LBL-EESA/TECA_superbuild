@@ -1,11 +1,11 @@
 #!/bin/bash
 set -v
-export DASHROOT=`pwd`
-export SHA=`git log --pretty=format:'%h' -n 1`
+export TECA_BUILD_CORES=2
 if [[ "$DOCKER_IMAGE" == "fedora" ]]; then
     source /usr/share/Modules/init/bash
 fi
 mkdir build
 cd build
 cmake --version
-ctest -S ${DASHROOT}/travis_ci/ctest_linux.cmake -V --timeout 180
+cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+make -j${TECA_BUILD_CORES} install

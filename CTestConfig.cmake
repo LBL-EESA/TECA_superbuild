@@ -1,6 +1,0 @@
-set(CTEST_PROJECT_NAME "TECA_superbuild")
-set(CTEST_NIGHTLY_START_TIME "23:00:00 PDT")
-set(CTEST_DROP_METHOD "https")
-set(CTEST_DROP_SITE "cdash.nersc.gov")
-set(CTEST_DROP_LOCATION "/submit.php?project=TECA_superbuild")
-set(CTEST_DROP_SITE_CDASH TRUE)
