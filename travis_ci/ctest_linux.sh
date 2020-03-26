@@ -8,4 +8,5 @@ mkdir build
 cd build
 cmake --version
 cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
-make -j${TECA_BUILD_CORES} install
+cmake --build .
+#make -j${TECA_BUILD_CORES} install
