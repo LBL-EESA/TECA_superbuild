@@ -7,6 +7,10 @@ if [[ "$DOCKER_IMAGE" == "fedora" ]]; then
 fi
 mkdir build
 cd build
+
+export OMPI_ALLOW_RUN_AS_ROOT=1
+export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
 cmake --version
 cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
 make -j${TECA_BUILD_CORES} install
