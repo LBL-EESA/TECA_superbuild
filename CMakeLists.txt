@@ -814,6 +814,7 @@ if (ENABLE_TECA)
 
     if (ENABLE_TECA_ERROR_PASS)
         set(PASS_COMMAND "|| true")
+    endif()
 
     # download and build TECA
     ExternalProject_Add(TECA
