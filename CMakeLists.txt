@@ -67,6 +67,7 @@ option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_OPENSSL "builds and installs OpenSSL" OFF)
 option(ENABLE_EXPAT "builds and installs expat" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
+option(ENABLE_TECA_ERROR_PASS "ignores TECA building or testing errors" OFF)
 
 # the list of enabled dependencies
 set(teca_deps)
@@ -811,6 +812,9 @@ if (ENABLE_TECA)
         message(STATUS "TECA test .............. Disabled")
     endif()
 
+    if (ENABLE_TECA_ERROR_PASS)
+        set(PASS_COMMAND "|| true")
+
     # download and build TECA
     ExternalProject_Add(TECA
         DEPENDS ${teca_deps}
@@ -833,7 +837,7 @@ if (ENABLE_TECA)
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
-        TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} || true
+        TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} ${PASS_COMMAND}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 0 LOG_BUILD 0 LOG_INSTALL 0)
 else()
     message(STATUS "TECA ................... Disabled")
