@@ -287,7 +287,7 @@ endif()
 
 # expat
 if (ENABLE_EXPAT)
-    message(STATUS "expat ................. Enabled")
+    message(STATUS "expat .................. Enabled")
     ExternalProject_Add(expat
         DEPENDS zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
