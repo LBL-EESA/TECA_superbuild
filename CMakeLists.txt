@@ -300,24 +300,22 @@ if (ENABLE_NETCDF)
     message(STATUS "HDF5 ................... Enabled")
     set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-hl --enable-build-mode=production)
-    # unfortunately hdf5's configure script provides no way to set path
-    # to mpi libraries. for now we'll disable parallel hdf5
-    #if (NOT WITHOUT_MPI)
-    #    if (ENABLE_MPICH)
-    #       list(APPEND hdf5_deps mpich)
-    #    endif()
-    #    list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
-    #endif()
+    if (NOT WITHOUT_MPI)
+        if (ENABLE_MPICH OR ENABLE_OPENMPI)
+            list(APPEND hdf5_deps mpi)
+        endif()
+        list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
+    endif()
     ExternalProject_Add(hdf5
         DEPENDS ${hdf5_deps}
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${HDF5_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}/configure
-          --prefix=${CMAKE_INSTALL_PREFIX} ${HDF5_CONFIG_FLAGS}
+        CONFIGURE_COMMAND env ${env} CC=cc CXX=CC ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}/configure
+          --prefix=${CMAKE_INSTALL_PREFIX} ${HDF5_CONFIG_FLAGS} --enable-shared --disable-static
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # Build NetCDF.
+    # Build NetCDF.${CMAKE_C_COMPILER} ${CMAKE_CXX_COMPILER}
     message(STATUS "NetCDF ................. Enabled")
     list(APPEND teca_deps netcdf)
     list(APPEND teca_flags "-DREQUIRE_NETCDF=TRUE")
@@ -326,21 +324,9 @@ if (ENABLE_NETCDF)
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NETCDF_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}
-        CMAKE_COMMAND ${CMAKE_COMMAND} ../${NETCDF_SOURCE}
-           -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-           "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-           "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
-           "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
-           -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-           "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-           "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-           "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-           -DENABLE_NETCDF4=ON -DENABLE_TESTS=OFF -DBUILD_EXAMPLES=OFF
-           -DNC_HAVE_PARALLEL_HDF5=OFF -DHDF5_IS_PARALLEL=OFF -DENABLE_DAP=OFF
-           -DHDF5_INCLUDE_DIR=${CMAKE_INSTALL_PREFIX}/include
-        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+        CONFIGURE_COMMAND env ${env} CC=cc CXX=CC ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}/configure
+          --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --disable-static --enable-netcdf-4 --enable-parallel4
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "HDF5 ................... Disabled")
     message(STATUS "NetCDF ................. Disabled")
