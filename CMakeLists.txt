@@ -19,6 +19,7 @@ set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 set(MPICH_SOURCE mpich-3.3.1)
 set(OPENMPI_SOURCE openmpi-4.0.1)
 set(OPENSSL_SOURCE openssl-1.1.1d)
+set(EXPAT_SOURCE expat-2.2.9)
 set(ZLIB_SOURCE zlib-1.2.11)
 set(HDF5_SOURCE hdf5-1.10.5)
 set(NETCDF_SOURCE netcdf-c-4.7.1)
@@ -60,6 +61,7 @@ option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_OPENSSL "builds and installs OpenSSL" ON)
+option(ENABLE_EXPAT "builds and installs expat" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
 # the list of enabled dependencies
@@ -278,6 +280,21 @@ else()
     message(STATUS "OpenSSL ................ Disabled")
 endif()
 
+# expat
+if (ENABLE_EXPAT)
+    message(STATUS "expat ................. Enabled")
+    ExternalProject_Add(expat
+        DEPENDS zlib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${EXPAT_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${EXPAT_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${EXPAT_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --without-xmlwf --without-docbook
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+else()
+    message(STATUS "expat .................. Disabled")
+endif()
+
 # NetCDF group
 if (ENABLE_NETCDF)
     # Build the HDF5 parallel I/O library.
@@ -337,6 +354,7 @@ if (ENABLE_UDUNITS)
     list(APPEND teca_deps udunits)
     list(APPEND teca_flags "-DREQUIRE_UDUNITS=TRUE")
     ExternalProject_Add(udunits
+        DEPENDS expat
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${UDUNITS_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${UDUNITS_SOURCE}
@@ -420,7 +438,7 @@ if (ENABLE_PYTHON)
         URL ${TECA_DEPS_URL}/${PYTHON_SOURCE}.tgz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}/configure
-            --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
+            --with-system-expat --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build setuptools
