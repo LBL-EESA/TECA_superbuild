@@ -28,7 +28,6 @@ set(BOOST_SOURCE boost_1_69_0)
 set(NCURSES_SOURCE ncurses-6.1)
 set(READLINE_SOURCE readline-8.0)
 set(PYTHON_SOURCE Python-3.7.4)
-set(SETUPTOOLS_SOURCE setuptools-41.2.0)
 set(SWIG_SOURCE swig-4.0.1)
 set(CYTHON_SOURCE Cython-0.29.13)
 set(NUMPY_SOURCE numpy-1.17.2)
@@ -266,7 +265,6 @@ endif()
 if (ENABLE_OPENSSL)
     message(STATUS "OpenSSL ................ Enabled")
     list(APPEND teca_deps openssl)
-    list(APPEND teca_flags "-DREQUIRE_OPENSSL=TRUE")
     ExternalProject_Add(openssl
         DEPENDS zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -438,21 +436,9 @@ if (ENABLE_PYTHON)
         URL ${TECA_DEPS_URL}/${PYTHON_SOURCE}.tgz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PYTHON_SOURCE}/configure
-            --with-system-expat --enable-shared --prefix=${CMAKE_INSTALL_PREFIX}
+            --with-system-expat --with-ensurepip=yes --enable-shared
+            --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-    # Build setuptools
-    message(STATUS "setuptools ............. Enabled")
-    ExternalProject_Add(setuptools
-        DEPENDS Python
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${SETUPTOOLS_SOURCE}.zip
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${SETUPTOOLS_SOURCE}
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-            setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-        INSTALL_COMMAND ""
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
@@ -469,7 +455,7 @@ if (ENABLE_PYTHON)
     # Build Cython.
     message(STATUS "Cython ................. Enabled")
     ExternalProject_Add(Cython
-        DEPENDS setuptools
+        DEPENDS Python
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${CYTHON_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYTHON_SOURCE}
@@ -483,7 +469,7 @@ if (ENABLE_PYTHON)
     message(STATUS "NumPy .................. Enabled")
     list(APPEND teca_deps numpy)
     ExternalProject_Add(numpy
-        DEPENDS Cython setuptools
+        DEPENDS Python Cython
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NUMPY_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NUMPY_SOURCE}
@@ -503,7 +489,7 @@ if (ENABLE_PYTHON)
         "Select the mpi4py configuration we use.")
 
     if (NOT WITHOUT_MPI)
-        set(mpi4py_deps setuptools numpy)
+        set(mpi4py_deps numpy)
         if (ENABLE_MPICH OR ENABLE_OPENMPI)
             list(APPEND mpi4py_deps mpi)
         endif()
@@ -574,7 +560,7 @@ if (ENABLE_PYTHON)
         # python_dateutil
         message(STATUS "python_dateutil ........ Enabled")
         ExternalProject_Add(python_dateutil
-            DEPENDS setuptools
+            DEPENDS Python
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${PYTHON_DATEUTIL_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_DATEUTIL_SOURCE}
@@ -587,7 +573,7 @@ if (ENABLE_PYTHON)
         # pyparsing
         message(STATUS "pyparsing .............. Enabled")
         ExternalProject_Add(pyparsing
-            DEPENDS setuptools
+            DEPENDS Python
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${PYPARSING_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYPARSING_SOURCE}
@@ -600,7 +586,7 @@ if (ENABLE_PYTHON)
         # cycler
         message(STATUS "cycler ................. Enabled")
         ExternalProject_Add(cycler
-            DEPENDS setuptools
+            DEPENDS Python
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${CYCLER_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYCLER_SOURCE}
@@ -613,7 +599,7 @@ if (ENABLE_PYTHON)
         # pytz
         message(STATUS "pytz ................... Enabled")
         ExternalProject_Add(pytz
-            DEPENDS setuptools
+            DEPENDS Python
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${PYTZ_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTZ_SOURCE}
@@ -626,7 +612,7 @@ if (ENABLE_PYTHON)
         # kiwisolver
         message(STATUS "kiwisolver ............. Enabled")
         ExternalProject_Add(kiwisolver
-            DEPENDS setuptools
+            DEPENDS Python
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${KIWISOLVER_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${KIWISOLVER_SOURCE}
@@ -640,7 +626,7 @@ if (ENABLE_PYTHON)
         # Build matplotlib
         message(STATUS "matplotlib ............. Enabled")
         list(APPEND teca_deps matplotlib)
-        set(matplotlib_deps setuptools numpy freetype pyparsing
+        set(matplotlib_deps numpy freetype pyparsing
             python_dateutil cycler pytz kiwisolver)
         if (NOT system_libpng)
             list(APPEND matplotlib_deps libpng)
@@ -667,7 +653,6 @@ if (ENABLE_PYTHON)
     endif()
 else()
     message(STATUS "Python ................. Disabled")
-    message(STATUS "setuptools ............. Disabled")
     message(STATUS "SWIG ................... Disabled")
     message(STATUS "Cython ................. Disabled")
     message(STATUS "NumPy .................. Disabled")
