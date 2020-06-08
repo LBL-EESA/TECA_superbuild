@@ -18,7 +18,7 @@ set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.3.1)
 set(OPENMPI_SOURCE openmpi-4.0.1)
-set(OPENSSL_SOURCE openssl-1.1.1d)
+set(OPENSSL_SOURCE openssl-1.1.1g)
 set(EXPAT_SOURCE expat-2.2.9)
 set(ZLIB_SOURCE zlib-1.2.11)
 set(HDF5_SOURCE hdf5-1.10.5)
