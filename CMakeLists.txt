@@ -308,8 +308,11 @@ if (ENABLE_NETCDF)
     set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-hl --enable-build-mode=production)
     if (NOT WITHOUT_MPI)
-        if (ENABLE_MPICH OR ENABLE_OPENMPI)
+        if (ENABLE_CRAY_MPICH)
+            set(mpi_compiler CC=cc CXX=CC)
+        elseif (ENABLE_MPICH OR ENABLE_OPENMPI)
             list(APPEND hdf5_deps mpi)
+            set(mpi_compiler CC=${CMAKE_INSTALL_PREFIX}/bin/mpicc CXX=${CMAKE_INSTALL_PREFIX}/bin/mpicxx)
         endif()
         list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
     endif()
@@ -318,7 +321,7 @@ if (ENABLE_NETCDF)
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${HDF5_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}
-        CONFIGURE_COMMAND env ${env} CC=cc CXX=CC ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}/configure
+        CONFIGURE_COMMAND env ${env} ${mpi_compiler} ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}/configure
           --prefix=${CMAKE_INSTALL_PREFIX} ${HDF5_CONFIG_FLAGS} --enable-shared --disable-static
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
@@ -331,8 +334,9 @@ if (ENABLE_NETCDF)
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NETCDF_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}
-        CONFIGURE_COMMAND env ${env} CC=cc CXX=CC ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}/configure
-          --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --disable-static --enable-netcdf-4 --enable-parallel4
+        CONFIGURE_COMMAND env ${env} ${mpi_compiler} ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}/configure
+          --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --disable-static --disable-dap
+          --enable-netcdf-4 --enable-parallel4
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "HDF5 ................... Disabled")
