@@ -18,7 +18,7 @@ set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.3.1)
 set(OPENMPI_SOURCE openmpi-4.0.1)
-set(OPENSSL_SOURCE openssl-1.1.1d)
+set(OPENSSL_SOURCE openssl-1.1.1g)
 set(EXPAT_SOURCE expat-2.2.9)
 set(ZLIB_SOURCE zlib-1.2.11)
 set(HDF5_SOURCE hdf5-1.10.5)
@@ -53,13 +53,13 @@ option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
-option(ENABLE_READLINE "builds and installs readline" ON)
+option(ENABLE_READLINE "builds and installs readline" OFF)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
-option(ENABLE_OPENSSL "builds and installs OpenSSL" ON)
+option(ENABLE_OPENSSL "builds and installs OpenSSL" OFF)
 option(ENABLE_EXPAT "builds and installs expat" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
 
@@ -308,8 +308,11 @@ if (ENABLE_NETCDF)
     set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-hl --enable-build-mode=production)
     if (NOT WITHOUT_MPI)
-        if (ENABLE_MPICH OR ENABLE_OPENMPI)
+        if (ENABLE_CRAY_MPICH)
+            set(mpi_compiler CC=cc CXX=CC)
+        elseif (ENABLE_MPICH OR ENABLE_OPENMPI)
             list(APPEND hdf5_deps mpi)
+            set(mpi_compiler CC=${CMAKE_INSTALL_PREFIX}/bin/mpicc CXX=${CMAKE_INSTALL_PREFIX}/bin/mpicxx)
         endif()
         list(APPEND HDF5_CONFIG_FLAGS --enable-parallel)
     endif()
@@ -318,7 +321,7 @@ if (ENABLE_NETCDF)
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${HDF5_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}
-        CONFIGURE_COMMAND env ${env} CC=cc CXX=CC ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}/configure
+        CONFIGURE_COMMAND env ${env} ${mpi_compiler} ${PROJECT_BINARY_DIR}/${HDF5_SOURCE}/configure
           --prefix=${CMAKE_INSTALL_PREFIX} ${HDF5_CONFIG_FLAGS} --enable-shared --disable-static
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
@@ -331,8 +334,9 @@ if (ENABLE_NETCDF)
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NETCDF_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}
-        CONFIGURE_COMMAND env ${env} CC=cc CXX=CC ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}/configure
-          --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --disable-static --enable-netcdf-4 --enable-parallel4
+        CONFIGURE_COMMAND env ${env} ${mpi_compiler} ${PROJECT_BINARY_DIR}/${NETCDF_SOURCE}/configure
+          --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --disable-static --disable-dap
+          --enable-netcdf-4 --enable-parallel4
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "HDF5 ................... Disabled")
