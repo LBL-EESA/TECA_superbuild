@@ -27,15 +27,19 @@ set(UDUNITS_SOURCE udunits-2.2.26)
 set(BOOST_SOURCE boost_1_69_0)
 set(NCURSES_SOURCE ncurses-6.1)
 set(READLINE_SOURCE readline-8.0)
+set(LIBFFI_SOURCE libffi-3.3)
 set(PYTHON_SOURCE Python-3.7.4)
+set(PCRE_SOURCE pcre2-10.35)
 set(SWIG_SOURCE swig-4.0.1)
 set(CYTHON_SOURCE Cython-0.29.13)
 set(NUMPY_SOURCE numpy-1.17.2)
 set(MPI4PY_SOURCE mpi4py-3.0.2)
 set(FREETYPE_SOURCE freetype-2.10.1)
 set(LIBPNG_SOURCE libpng-1.6.37)
+set(SETUPTOOLS_SCM_SOURCE setuptools_scm-4.1.2)
 set(PYTHON_DATEUTIL_SOURCE python-dateutil-2.8.0)
 set(PYPARSING_SOURCE pyparsing-2.4.2)
+set(SIX_SOURCE six-1.15.0)
 set(CYCLER_SOURCE cycler-0.10.0)
 set(PYTZ_SOURCE pytz-2019.2)
 set(KIWISOLVER_SOURCE kiwisolver-1.1.0)
@@ -397,7 +401,7 @@ endif()
 
 # Python group
 if (ENABLE_PYTHON)
-    set(py_deps ncurses zlib)
+    set(py_deps ncurses zlib libffi)
     # ncurses
     message(STATUS "ncurses ................ Enabled")
     ExternalProject_Add(ncurses
@@ -405,6 +409,16 @@ if (ENABLE_PYTHON)
         URL ${TECA_DEPS_URL}/${NCURSES_SOURCE}.tar.gz
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${NCURSES_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${NCURSES_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
+    # libffi
+    message(STATUS "libffi ................. Enabled")
+    ExternalProject_Add(libffi
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${LIBFFI_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBFFI_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${LIBFFI_SOURCE}/configure
             --prefix=${CMAKE_INSTALL_PREFIX}
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
@@ -437,13 +451,23 @@ if (ENABLE_PYTHON)
             --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
+    # pcre
+    message(STATUS "pcre ................... Enabled")
+    ExternalProject_Add(pcre
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${PCRE_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
     list(APPEND teca_deps SWIG)
     ExternalProject_Add(SWIG
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${SWIG_SOURCE}.tar.gz
-        DEPENDS Python
+        DEPENDS Python pcre
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}/configure
             --with-python=${CMAKE_INSTALL_PREFIX}/bin/python3 --prefix=${CMAKE_INSTALL_PREFIX}
@@ -554,10 +578,23 @@ if (ENABLE_PYTHON)
                 --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
+        # setuptools_scm
+        message(STATUS "setuptools_scm ......... Enabled")
+        ExternalProject_Add(setuptools_scm
+            DEPENDS Python
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${SETUPTOOLS_SCM_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SETUPTOOLS_SCM_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
         # python_dateutil
         message(STATUS "python_dateutil ........ Enabled")
         ExternalProject_Add(python_dateutil
-            DEPENDS Python
+            DEPENDS Python setuptools_scm
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${PYTHON_DATEUTIL_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_DATEUTIL_SOURCE}
@@ -580,10 +617,23 @@ if (ENABLE_PYTHON)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
+        # six
+        message(STATUS "six .................... Enabled")
+        ExternalProject_Add(six
+            DEPENDS Python
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${SIX_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SIX_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
         # cycler
         message(STATUS "cycler ................. Enabled")
         ExternalProject_Add(cycler
-            DEPENDS Python
+            DEPENDS Python six
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${CYCLER_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYCLER_SOURCE}
