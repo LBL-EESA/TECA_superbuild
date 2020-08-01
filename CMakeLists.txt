@@ -451,15 +451,16 @@ if (ENABLE_PYTHON)
             --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
+    # disable this until Abdel installs trhe right version
     # pcre
-    message(STATUS "pcre ................... Enabled")
-    ExternalProject_Add(pcre
-        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-        URL ${TECA_DEPS_URL}/${PCRE_SOURCE}.tar.gz
-        SOURCE_DIR ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}
-        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}/configure
-            --prefix=${CMAKE_INSTALL_PREFIX}
-        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    #message(STATUS "pcre ................... Enabled")
+    #ExternalProject_Add(pcre
+    #    DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+    #    URL ${TECA_DEPS_URL}/${PCRE_SOURCE}.tar.gz
+    #    SOURCE_DIR ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}
+    #    CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}/configure
+    #        --prefix=${CMAKE_INSTALL_PREFIX}
+    #    BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
@@ -467,10 +468,11 @@ if (ENABLE_PYTHON)
     ExternalProject_Add(SWIG
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${SWIG_SOURCE}.tar.gz
-        DEPENDS Python pcre
+        DEPENDS Python
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}/configure
             --with-python=${CMAKE_INSTALL_PREFIX}/bin/python3 --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_COMMAND env ${env} make -j
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Cython.
@@ -729,13 +731,14 @@ if (ENABLE_LIBXLSXWRITER)
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBXLSXWRITER_SOURCE}
         CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
             -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-            "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-            "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS}"
-            "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS}"
+            "-DCMAKE_C_FLAGS=${c_flags}"
+            "-DCMAKE_C_FLAGS_DEBUG=${c_flags}"
+            "-DCMAKE_C_FLAGS_RELEASE=${c_flags}"
             -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-            "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-            "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-            "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+            "-DCMAKE_CXX_FLAGS=${cxx_flags}"
+            "-DCMAKE_CXX_FLAGS_DEBUG=${cxx_flags}"
+            "-DCMAKE_CXX_FLAGS_RELEASE=${cxx_flags}"
+            "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
             -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
