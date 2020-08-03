@@ -13,7 +13,7 @@ env:
   global:
     - BUILD_TYPE=Debug
     - TECA_SUPERBUILD_DIR=/travis_teca_superbuild_dir
-    - DOCKER_IMAGE=fedora IMAGE_VERSION=28 IMAGE_NAME=fedora_28
+    - DOCKER_IMAGE=fedora IMAGE_VERSION=31 IMAGE_NAME=fedora_31
 #  global:
 #    - BUILD_TYPE=Debug
 #    - TECA_SUPERBUILD_DIR=/travis_teca_superbuild_dir
