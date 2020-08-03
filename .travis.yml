@@ -46,7 +46,8 @@ install:
     if [[ "$TRAVIS_OS_NAME" == "linux" ]];
     then
     docker exec teca_${DOCKER_IMAGE}_${IMAGE_VERSION} /bin/bash -c
-    "${TECA_SUPERBUILD_DIR}/travis_ci/install_${IMAGE_NAME}.sh";
+    "${TECA_SUPERBUILD_DIR}/travis_ci/install_${IMAGE_NAME}.sh &&
+    chmod -R a+rwX ${TECA_SUPERBUILD_DIR}";
     fi
 
 script:
@@ -54,7 +55,7 @@ script:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]];
     then
     docker exec --user 1000:1000 teca_${DOCKER_IMAGE}_${IMAGE_VERSION}
-    /bin/bash -c "pwd && export TRAVIS_BRANCH=${TRAVIS_BRANCH} &&
+    /bin/bash -c "pwd && id && export TRAVIS_BRANCH=${TRAVIS_BRANCH} &&
     export BUILD_TYPE=${BUILD_TYPE} &&
     export DOCKER_IMAGE=${DOCKER_IMAGE} &&
     export IMAGE_VERSION=${IMAGE_VERSION} &&
