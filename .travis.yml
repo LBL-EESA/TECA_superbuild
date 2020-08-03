@@ -38,15 +38,16 @@ before_install:
     then
     docker pull ${DOCKER_IMAGE}:${IMAGE_VERSION} &&
     docker run -t -v ${TRAVIS_BUILD_DIR}:${TECA_SUPERBUILD_DIR} -w ${TECA_SUPERBUILD_DIR}
-    --name teca_${DOCKER_IMAGE}_${IMAGE_VERSION} -d ${DOCKER_IMAGE}:${IMAGE_VERSION};
+    --name teca_${DOCKER_IMAGE}_${IMAGE_VERSION}
+    -d ${DOCKER_IMAGE}:${IMAGE_VERSION};
     fi
 
 install:
   - >
     if [[ "$TRAVIS_OS_NAME" == "linux" ]];
     then
-    docker exec teca_${DOCKER_IMAGE}_${IMAGE_VERSION} /bin/bash -c
-    "${TECA_SUPERBUILD_DIR}/travis_ci/install_${IMAGE_NAME}.sh";
+    docker exec --user 1000:1000 teca_${DOCKER_IMAGE}_${IMAGE_VERSION}
+    /bin/bash -c "${TECA_SUPERBUILD_DIR}/travis_ci/install_${IMAGE_NAME}.sh";
     fi
 
 script:
