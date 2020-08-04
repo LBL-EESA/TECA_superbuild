@@ -8,5 +8,6 @@ mkdir build
 cd build
 
 cmake --version
-cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_OPENSSL=ON \
+	  -DENABLE_LIBXLSXWRITER=OFF ..
 make -j install
