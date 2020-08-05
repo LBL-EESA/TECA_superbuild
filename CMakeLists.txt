@@ -28,7 +28,7 @@ set(BOOST_SOURCE boost_1_73_0)
 set(NCURSES_SOURCE ncurses-6.2)
 set(READLINE_SOURCE readline-8.0)
 set(LIBFFI_SOURCE libffi-3.3)
-set(PYTHON_SOURCE Python-3.7.4)
+set(PYTHON_SOURCE Python-3.8.5)
 set(PCRE_SOURCE pcre-8.44)
 set(SWIG_SOURCE swig-4.0.2)
 set(CYTHON_SOURCE Cython-0.29.21)
@@ -42,10 +42,11 @@ set(PYPARSING_SOURCE pyparsing-2.4.7)
 set(SIX_SOURCE six-1.15.0)
 set(CYCLER_SOURCE cycler-0.10.0)
 set(PYTZ_SOURCE pytz-2020.1)
+set(WHEEL_SOURCE wheel-0.34.2)
 set(KIWISOLVER_SOURCE kiwisolver-1.2.0)
 set(MATPLOTLIB_SOURCE matplotlib-3.2.2)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 3.0.0 CACHE STRING
+set(TECA_SOURCE develop CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -657,10 +658,23 @@ if (ENABLE_PYTHON)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
+        # wheel
+        message(STATUS "wheel .................. Enabled")
+        ExternalProject_Add(wheel
+            DEPENDS Python
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${WHEEL_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${WHEEL_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
         # kiwisolver
         message(STATUS "kiwisolver ............. Enabled")
         ExternalProject_Add(kiwisolver
-            DEPENDS Python
+            DEPENDS Python wheel
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${KIWISOLVER_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${KIWISOLVER_SOURCE}
@@ -698,6 +712,7 @@ if (ENABLE_PYTHON)
         message(STATUS "six .................... Disabled")
         message(STATUS "cycler ................. Disabled")
         message(STATUS "pytz ................... Disabled")
+        message(STATUS "wheel .................. Disabled")
         message(STATUS "kiwisolver ............. Disabled")
         message(STATUS "matplotlib ............. Disabled")
     endif()
@@ -718,6 +733,7 @@ else()
     message(STATUS "six .................... Disabled")
     message(STATUS "cycler ................. Disabled")
     message(STATUS "pytz ................... Disabled")
+    message(STATUS "wheel .................. Disabled")
     message(STATUS "kiwisolver ............. Disabled")
     message(STATUS "matplotlib ............. Disabled")
 endif()
