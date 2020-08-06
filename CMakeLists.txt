@@ -466,10 +466,10 @@ if (ENABLE_PYTHON)
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
     list(APPEND teca_deps SWIG)
-    ExternalProject_Add(SWIG pcre
+    ExternalProject_Add(SWIG
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${SWIG_SOURCE}.tar.gz
-        DEPENDS Python
+        DEPENDS Python pcre
         SOURCE_DIR ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}
         CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${SWIG_SOURCE}/configure
             --with-python=${CMAKE_INSTALL_PREFIX}/bin/python3 --prefix=${CMAKE_INSTALL_PREFIX}
