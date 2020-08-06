@@ -403,7 +403,7 @@ endif()
 
 # Python group
 if (ENABLE_PYTHON)
-    set(py_deps ncurses zlib libffi)
+    set(py_deps ncurses zlib expat libffi)
     # ncurses
     message(STATUS "ncurses ................ Enabled")
     ExternalProject_Add(ncurses
@@ -466,7 +466,7 @@ if (ENABLE_PYTHON)
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
     list(APPEND teca_deps SWIG)
-    ExternalProject_Add(SWIG
+    ExternalProject_Add(SWIG pcre
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${SWIG_SOURCE}.tar.gz
         DEPENDS Python
