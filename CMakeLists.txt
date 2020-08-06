@@ -17,35 +17,36 @@ set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
 
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.3.1)
-set(OPENMPI_SOURCE openmpi-4.0.1)
+set(OPENMPI_SOURCE openmpi-4.0.4)
 set(OPENSSL_SOURCE openssl-1.1.1g)
 set(EXPAT_SOURCE expat-2.2.9)
 set(ZLIB_SOURCE zlib-1.2.11)
-set(HDF5_SOURCE hdf5-1.10.5)
-set(NETCDF_SOURCE netcdf-c-4.7.1)
+set(HDF5_SOURCE hdf5-1.12.0)
+set(NETCDF_SOURCE netcdf-c-4.7.4)
 set(UDUNITS_SOURCE udunits-2.2.26)
-set(BOOST_SOURCE boost_1_69_0)
-set(NCURSES_SOURCE ncurses-6.1)
+set(BOOST_SOURCE boost_1_73_0)
+set(NCURSES_SOURCE ncurses-6.2)
 set(READLINE_SOURCE readline-8.0)
 set(LIBFFI_SOURCE libffi-3.3)
-set(PYTHON_SOURCE Python-3.7.4)
-set(PCRE_SOURCE pcre2-10.35)
-set(SWIG_SOURCE swig-4.0.1)
-set(CYTHON_SOURCE Cython-0.29.13)
-set(NUMPY_SOURCE numpy-1.17.2)
-set(MPI4PY_SOURCE mpi4py-3.0.2)
-set(FREETYPE_SOURCE freetype-2.10.1)
+set(PYTHON_SOURCE Python-3.8.5)
+set(PCRE_SOURCE pcre-8.44)
+set(SWIG_SOURCE swig-4.0.2)
+set(CYTHON_SOURCE Cython-0.29.21)
+set(NUMPY_SOURCE numpy-1.19.1)
+set(MPI4PY_SOURCE mpi4py-3.0.3)
+set(FREETYPE_SOURCE freetype-2.10.2)
 set(LIBPNG_SOURCE libpng-1.6.37)
 set(SETUPTOOLS_SCM_SOURCE setuptools_scm-4.1.2)
-set(PYTHON_DATEUTIL_SOURCE python-dateutil-2.8.0)
-set(PYPARSING_SOURCE pyparsing-2.4.2)
+set(PYTHON_DATEUTIL_SOURCE python-dateutil-2.8.1)
+set(PYPARSING_SOURCE pyparsing-2.4.7)
 set(SIX_SOURCE six-1.15.0)
 set(CYCLER_SOURCE cycler-0.10.0)
-set(PYTZ_SOURCE pytz-2019.2)
-set(KIWISOLVER_SOURCE kiwisolver-1.1.0)
-set(MATPLOTLIB_SOURCE matplotlib-3.1.1)
+set(PYTZ_SOURCE pytz-2020.1)
+set(WHEEL_SOURCE wheel-0.34.2)
+set(KIWISOLVER_SOURCE kiwisolver-1.2.0)
+set(MATPLOTLIB_SOURCE matplotlib-3.2.2)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 3.0.0 CACHE STRING
+set(TECA_SOURCE develop CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # enable/disable each piece, all on by default
@@ -451,16 +452,15 @@ if (ENABLE_PYTHON)
             --prefix=${CMAKE_INSTALL_PREFIX}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
-    # disable this until Abdel installs trhe right version
     # pcre
-    #message(STATUS "pcre ................... Enabled")
-    #ExternalProject_Add(pcre
-    #    DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-    #    URL ${TECA_DEPS_URL}/${PCRE_SOURCE}.tar.gz
-    #    SOURCE_DIR ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}
-    #    CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}/configure
-    #        --prefix=${CMAKE_INSTALL_PREFIX}
-    #    BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+    message(STATUS "pcre ................... Enabled")
+    ExternalProject_Add(pcre
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        URL ${TECA_DEPS_URL}/${PCRE_SOURCE}.tar.gz
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}
+        CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${PCRE_SOURCE}/configure
+            --prefix=${CMAKE_INSTALL_PREFIX}
+        BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Swig.
     message(STATUS "SWIG ................... Enabled")
@@ -658,10 +658,23 @@ if (ENABLE_PYTHON)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
+        # wheel
+        message(STATUS "wheel .................. Enabled")
+        ExternalProject_Add(wheel
+            DEPENDS Python
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${WHEEL_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${WHEEL_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+
         # kiwisolver
         message(STATUS "kiwisolver ............. Enabled")
         ExternalProject_Add(kiwisolver
-            DEPENDS Python
+            DEPENDS Python wheel
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             URL ${TECA_DEPS_URL}/${KIWISOLVER_SOURCE}.tar.gz
             SOURCE_DIR ${PROJECT_BINARY_DIR}/${KIWISOLVER_SOURCE}
@@ -693,25 +706,34 @@ if (ENABLE_PYTHON)
     else()
         message(STATUS "libpng ................. Disabled")
         message(STATUS "freetype ............... Disabled")
+        message(STATUS "setuptools_scm ......... Disabled")
         message(STATUS "python_dateutil ........ Disabled")
         message(STATUS "pyparsing .............. Disabled")
+        message(STATUS "six .................... Disabled")
         message(STATUS "cycler ................. Disabled")
         message(STATUS "pytz ................... Disabled")
+        message(STATUS "wheel .................. Disabled")
         message(STATUS "kiwisolver ............. Disabled")
         message(STATUS "matplotlib ............. Disabled")
     endif()
 else()
+    message(STATUS "ncurses ................ Disabled")
+    message(STATUS "libffi ................. Disabled")
     message(STATUS "Python ................. Disabled")
+    message(STATUS "pcre ................... Disabled")
     message(STATUS "SWIG ................... Disabled")
     message(STATUS "Cython ................. Disabled")
     message(STATUS "NumPy .................. Disabled")
     message(STATUS "mpi4py ................. Disabled")
     message(STATUS "libpng ................. Disabled")
     message(STATUS "freetype ............... Disabled")
+    message(STATUS "setuptools_scm ......... Disabled")
     message(STATUS "python_dateutil ........ Disabled")
     message(STATUS "pyparsing .............. Disabled")
+    message(STATUS "six .................... Disabled")
     message(STATUS "cycler ................. Disabled")
     message(STATUS "pytz ................... Disabled")
+    message(STATUS "wheel .................. Disabled")
     message(STATUS "kiwisolver ............. Disabled")
     message(STATUS "matplotlib ............. Disabled")
 endif()
