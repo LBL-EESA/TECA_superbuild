@@ -59,6 +59,5 @@ script:
     export BUILD_TYPE=${BUILD_TYPE} &&
     export DOCKER_IMAGE=${DOCKER_IMAGE} &&
     export IMAGE_VERSION=${IMAGE_VERSION} &&
-    ${TECA_SUPERBUILD_DIR}/travis_ci/ctest_linux.sh &&
-    cat  /travis_teca_superbuild_dir/build/SWIG-prefix/src/SWIG-stamp/SWIG-configure-err.log";
+    ${TECA_SUPERBUILD_DIR}/travis_ci/ctest_linux.sh";
     fi

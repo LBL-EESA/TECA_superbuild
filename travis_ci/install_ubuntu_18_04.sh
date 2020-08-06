@@ -6,7 +6,7 @@ apt-get update -qq
 
 # install deps
 # use PIP for Python packages
-apt-get install -qq -y git-core gcc g++ gfortran cmake swig \
+apt-get install -qq -y git-core gcc g++ gfortran cmake swig
     
 
 git clone http://github.com/burlen/libxlsxwriter.git

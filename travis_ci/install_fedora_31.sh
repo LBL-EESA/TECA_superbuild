@@ -6,7 +6,7 @@ dnf update -qq -y
 
 # install deps
 dnf install -qq -y environment-modules git-all gcc-c++ \
-    gcc-gfortran make cmake subversion libtool
+    gcc-gfortran make cmake subversion openssl-devel libtool
 
 echo ${TRAVIS_BRANCH}
 echo ${BUILD_TYPE}
