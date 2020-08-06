@@ -61,5 +61,6 @@ script:
     export DOCKER_IMAGE=${DOCKER_IMAGE} &&
     export IMAGE_VERSION=${IMAGE_VERSION} &&
     (${TECA_SUPERBUILD_DIR}/travis_ci/ctest_linux.sh || true) &&
+    cat /travis_teca_superbuild_dir/build/Python-prefix/src/Python-stamp/Python-install-err.log &&
     cat /travis_teca_superbuild_dir/build/kiwisolver-prefix/src/kiwisolver-stamp/kiwisolver-build-err.log";
     fi
