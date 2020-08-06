@@ -9,4 +9,4 @@ cd build
 
 cmake --version
 cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_LIBXLSXWRITER=OFF ..
-make -j install
+make install
