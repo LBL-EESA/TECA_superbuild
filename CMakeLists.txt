@@ -794,6 +794,7 @@ if (ENABLE_TECA)
     set(tmp)
     if (ENABLE_TECA_DATA)
         message(STATUS "TECA data .............. Enabled")
+        list(APPEND teca_deps TECA_data)
         ExternalProject_Add(TECA_data
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
             SVN_REPOSITORY ${TECA_DATA_URL}
