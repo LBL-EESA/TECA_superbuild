@@ -52,8 +52,8 @@ set(TECA_SOURCE develop CACHE STRING
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
-option(ENABLE_MPICH "builds and installs MPICH MPI" ON)
-option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" OFF)
+option(ENABLE_MPICH "builds and installs MPICH MPI" OFF)
+option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" ON)
 option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
 option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
