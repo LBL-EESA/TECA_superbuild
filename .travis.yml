@@ -55,7 +55,7 @@ script:
     if [[ "${TRAVIS_OS_NAME}" == "linux" ]];
     then
     docker exec --user 1000:1000 teca_${DOCKER_IMAGE}_${IMAGE_VERSION}
-    /bin/bash -c "pwd && id && ulimit -a && cat /proc/meminfo && cat /proc/cpuinfo &&
+    /bin/bash -c "pwd && lscpu && id && cat /proc/cpuinfo && ulimit -a && cat /proc/meminfo &&
     export TRAVIS_BRANCH=${TRAVIS_BRANCH} &&
     export BUILD_TYPE=${BUILD_TYPE} &&
     export DOCKER_IMAGE=${DOCKER_IMAGE} &&
