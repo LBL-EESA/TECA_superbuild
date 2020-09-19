@@ -45,6 +45,8 @@ set(PYTZ_SOURCE pytz-2020.1)
 set(WHEEL_SOURCE wheel-0.34.2)
 set(KIWISOLVER_SOURCE kiwisolver-1.2.0)
 set(MATPLOTLIB_SOURCE matplotlib-3.2.2)
+set(FUTURE_SOURCE future-0.18.2)
+set(TORCH_SOURCE torch-1.6.0-cp38-cp38-manylinux1_x86_64)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(TECA_SOURCE develop CACHE STRING
     "branch to checkout from the TECA git repository")
@@ -60,6 +62,7 @@ option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_READLINE "builds and installs readline" OFF)
 option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
+option(ENABLE_TORCH "builds and installs PyTorch" OFF)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
@@ -716,6 +719,35 @@ if (ENABLE_PYTHON)
         message(STATUS "wheel .................. Disabled")
         message(STATUS "kiwisolver ............. Disabled")
         message(STATUS "matplotlib ............. Disabled")
+    endif()
+
+    if (ENABLE_TORCH)
+        # future
+        message(STATUS "future ................. Enabled")
+        ExternalProject_Add(future
+            DEPENDS Python
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${FUTURE_SOURCE}.tar.gz
+            SOURCE_DIR ${PROJECT_BINARY_DIR}/${FUTURE_SOURCE}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+
+        # torch
+        message(STATUS "torch .................. Enabled")
+        list(APPEND teca_deps torch)
+        ExternalProject_Add(torch
+            DEPENDS Python numpy future
+            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+            URL ${TECA_DEPS_URL}/${TORCH_SOURCE}.whl
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            INSTALL_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/pip3 install
+                --install-option="--prefix=${CMAKE_INSTALL_PREFIX}"
+                ${PROJECT_BINARY_DIR}/${TORCH_SOURCE}.whl
+            DOWNLOAD_NO_EXTRACT 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     endif()
 else()
     message(STATUS "ncurses ................ Disabled")
