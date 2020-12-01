@@ -49,6 +49,7 @@ option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_READLINE "builds and installs readline" OFF)
 option(ENABLE_MATPLOTLIB "installs matplotlib via pip" ON)
+option(ENABLE_PYTORCH "installs pytorch via pip" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
@@ -546,6 +547,26 @@ if (ENABLE_PYTHON)
     else()
         message(STATUS "matplotlib ............. Disabled")
     endif()
+
+    if (ENABLE_PYTORCH)
+        # install pytorch
+        message(STATUS "pytorch ................ Enabled")
+        list(APPEND teca_deps pytorch)
+        ExternalProject_Add(pytorch
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install torch==1.7.0+cpu torchvision==0.8.1+cpu torchaudio==0.7.0
+                -f https://download.pytorch.org/whl/torch_stable.html
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+    else()
+        message(STATUS "pytorch ................ Disabled")
+    endif()
+
+
 else()
     message(STATUS "ncurses ................ Disabled")
     message(STATUS "libffi ................. Disabled")
@@ -556,6 +577,7 @@ else()
     message(STATUS "NumPy .................. Disabled")
     message(STATUS "mpi4py ................. Disabled")
     message(STATUS "matplotlib ............. Disabled")
+    message(STATUS "pytorch ................ Disabled")
 endif()
 
 # Build libxlsxwriter.
