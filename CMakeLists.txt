@@ -34,17 +34,6 @@ set(SWIG_SOURCE swig-4.0.2)
 set(CYTHON_SOURCE Cython-0.29.21)
 set(NUMPY_SOURCE numpy-1.19.1)
 set(MPI4PY_SOURCE mpi4py-3.0.3)
-set(FREETYPE_SOURCE freetype-2.10.2)
-set(LIBPNG_SOURCE libpng-1.6.37)
-set(SETUPTOOLS_SCM_SOURCE setuptools_scm-4.1.2)
-set(PYTHON_DATEUTIL_SOURCE python-dateutil-2.8.1)
-set(PYPARSING_SOURCE pyparsing-2.4.7)
-set(SIX_SOURCE six-1.15.0)
-set(CYCLER_SOURCE cycler-0.10.0)
-set(PYTZ_SOURCE pytz-2020.1)
-set(WHEEL_SOURCE wheel-0.34.2)
-set(KIWISOLVER_SOURCE kiwisolver-1.2.0)
-set(MATPLOTLIB_SOURCE matplotlib-3.2.2)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(TECA_SOURCE develop CACHE STRING
     "branch to checkout from the TECA git repository")
@@ -59,7 +48,7 @@ option(WITHOUT_MPI "Disable all dependence on MPI" OFF)
 option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_READLINE "builds and installs readline" OFF)
-option(ENABLE_MATPLOTLIB "builds and installs matplotlib group" ON)
+option(ENABLE_MATPLOTLIB "installs matplotlib via pip" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
@@ -542,178 +531,19 @@ if (ENABLE_PYTHON)
     endif()
 
     if (ENABLE_MATPLOTLIB)
-        find_program(PKG_CONFIG pkg-config DOC "pkg-config program")
-        if (NOT PKG_CONFIG)
-            message(FATAL_ERROR "pkg-config is required to build matplotlib")
-        endif()
-
-        # libpng
-        set(system_libpng OFF)
-        if (APPLE)
-            # see issue #20
-            find_library(have_system_libpng libpng.dylib)
-            if (have_system_libpng)
-                set(system_libpng ON)
-                message(STATUS "libpng ................. System")
-            endif()
-        endif()
-        if (NOT system_libpng)
-            message(STATUS "libpng ................. Enabled")
-            ExternalProject_Add(libpng
-                DEPENDS zlib
-                DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-                URL ${TECA_DEPS_URL}/${LIBPNG_SOURCE}.tar.gz
-                SOURCE_DIR ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}
-                CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${LIBPNG_SOURCE}/configure
-                    --prefix=${CMAKE_INSTALL_PREFIX}
-                BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-        endif()
-
-        # freetype
-        message(STATUS "freetype ............... Enabled")
-        ExternalProject_Add(freetype
-            DEPENDS zlib
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${FREETYPE_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}
-            CONFIGURE_COMMAND env ${env} ${PROJECT_BINARY_DIR}/${FREETYPE_SOURCE}/configure
-                --prefix=${CMAKE_INSTALL_PREFIX}
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # setuptools_scm
-        message(STATUS "setuptools_scm ......... Enabled")
-        ExternalProject_Add(setuptools_scm
-            DEPENDS Python
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${SETUPTOOLS_SCM_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SETUPTOOLS_SCM_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # python_dateutil
-        message(STATUS "python_dateutil ........ Enabled")
-        ExternalProject_Add(python_dateutil
-            DEPENDS Python setuptools_scm
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${PYTHON_DATEUTIL_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTHON_DATEUTIL_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # pyparsing
-        message(STATUS "pyparsing .............. Enabled")
-        ExternalProject_Add(pyparsing
-            DEPENDS Python
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${PYPARSING_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYPARSING_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # six
-        message(STATUS "six .................... Enabled")
-        ExternalProject_Add(six
-            DEPENDS Python
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${SIX_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${SIX_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # cycler
-        message(STATUS "cycler ................. Enabled")
-        ExternalProject_Add(cycler
-            DEPENDS Python six
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${CYCLER_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${CYCLER_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # pytz
-        message(STATUS "pytz ................... Enabled")
-        ExternalProject_Add(pytz
-            DEPENDS Python
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${PYTZ_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${PYTZ_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # wheel
-        message(STATUS "wheel .................. Enabled")
-        ExternalProject_Add(wheel
-            DEPENDS Python
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${WHEEL_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${WHEEL_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # kiwisolver
-        message(STATUS "kiwisolver ............. Enabled")
-        ExternalProject_Add(kiwisolver
-            DEPENDS Python wheel
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${KIWISOLVER_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${KIWISOLVER_SOURCE}
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
-            INSTALL_COMMAND ""
-            INSTALL_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/pip3 install kiwisolver
-            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
-
-        # Build matplotlib
+        # install matplotlib
         message(STATUS "matplotlib ............. Enabled")
         list(APPEND teca_deps matplotlib)
-        set(matplotlib_deps numpy freetype pyparsing
-            python_dateutil cycler pytz kiwisolver)
-        if (NOT system_libpng)
-            list(APPEND matplotlib_deps libpng)
-        endif()
         ExternalProject_Add(matplotlib
-            DEPENDS Python ${matplotlib_deps}
-            DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
-            URL ${TECA_DEPS_URL}/${MATPLOTLIB_SOURCE}.tar.gz
-            SOURCE_DIR ${PROJECT_BINARY_DIR}/${MATPLOTLIB_SOURCE}
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                setup.py build install "--prefix=${CMAKE_INSTALL_PREFIX}"
+                -mpip install matplotlib
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
-        message(STATUS "libpng ................. Disabled")
-        message(STATUS "freetype ............... Disabled")
-        message(STATUS "setuptools_scm ......... Disabled")
-        message(STATUS "python_dateutil ........ Disabled")
-        message(STATUS "pyparsing .............. Disabled")
-        message(STATUS "six .................... Disabled")
-        message(STATUS "cycler ................. Disabled")
-        message(STATUS "pytz ................... Disabled")
-        message(STATUS "wheel .................. Disabled")
-        message(STATUS "kiwisolver ............. Disabled")
         message(STATUS "matplotlib ............. Disabled")
     endif()
 else()
@@ -725,16 +555,6 @@ else()
     message(STATUS "Cython ................. Disabled")
     message(STATUS "NumPy .................. Disabled")
     message(STATUS "mpi4py ................. Disabled")
-    message(STATUS "libpng ................. Disabled")
-    message(STATUS "freetype ............... Disabled")
-    message(STATUS "setuptools_scm ......... Disabled")
-    message(STATUS "python_dateutil ........ Disabled")
-    message(STATUS "pyparsing .............. Disabled")
-    message(STATUS "six .................... Disabled")
-    message(STATUS "cycler ................. Disabled")
-    message(STATUS "pytz ................... Disabled")
-    message(STATUS "wheel .................. Disabled")
-    message(STATUS "kiwisolver ............. Disabled")
     message(STATUS "matplotlib ............. Disabled")
 endif()
 
