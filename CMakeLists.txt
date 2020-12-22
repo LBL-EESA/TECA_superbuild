@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(TECA_superbuild)
 include(ExternalProject)
+include(version.cmake)
 
 # where various resources are housed and served
 set(TECA_URL "http://github.com/LBL-EESA/TECA"
@@ -37,6 +38,11 @@ set(MPI4PY_SOURCE mpi4py-3.0.3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(TECA_SOURCE develop CACHE STRING
     "branch to checkout from the TECA git repository")
+
+get_package_version(${PYTHON_SOURCE} Python PYTHON)
+get_package_version(${NUMPY_SOURCE} numpy NUMPY)
+get_package_version(${NETCDF_SOURCE} netcdf-c NETCDF)
+
 
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
@@ -187,8 +193,9 @@ set(CTEST_FLAGS  --output-on-failure CACHE STRING
 # that should be used at run-time.
 set(py_env)
 if (ENABLE_PYTHON)
+
     set(py_env PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg
-        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python3.7/site-packages/)
+        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/)
 endif()
 set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     "CPPFLAGS=${cpp_flags}" "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" "LDFLAGS=${ld_flags}"

@@ -1,23 +1,80 @@
 #%Module 1.0
-prereq PrgEnv-gnu
 
-prepend-path PATH @CMAKE_INSTALL_PREFIX@/bin/
-prepend-path LD_LIBRARY_PATH @CMAKE_INSTALL_PREFIX@/lib/:@CMAKE_INSTALL_PREFIX@/lib64/
-prepend-path PKG_CONFIG_PATH @CMAKE_INSTALL_PREFIX@/lib/pkgconfig:@CMAKE_INSTALL_PREFIX@/lib64/pkgconfig
+set teca_version "@TECA_SOURCE@"
+set python_version "@PYTHON_VERSION_MAJOR@.@PYTHON_VERSION_MINOR@"
+set python_version_full "@PYTHON_VERSION_MAJOR@.@PYTHON_VERSION_MINOR@.@PYTHON_VERSION_PATCH@"
+set prefix "@CMAKE_INSTALL_PREFIX@"
 
-prepend-path PYTHONPATH @CMAKE_INSTALL_PREFIX@/lib:@CMAKE_INSTALL_PREFIX@/lib/python3.7/site-packages/
-prepend-path PYTHONPATH @CMAKE_INSTALL_PREFIX@/lib64:@CMAKE_INSTALL_PREFIX@/lib64/python3.7/site-packages/
+puts stderr [format "TECA (%s)" ${teca_version}]
 
-# this interferes with python2 and various system level scripts
-# in use on Cori. Especially where others invoke as "python", this
-# by convention executes python2. None the less in some cases it is
-# required to set it to prevent the interplay of this install with
-# others in the environment. In that case uncomment here
-#setenv PYTHONHOME @CMAKE_INSTALL_PREFIX@
+# Check for Cray system
+if {[string compare "@ENABLE_CRAY_MPICH@" "ON"] == 0} {
 
-# for server install
-setenv MPLBACKEND Agg
+    # make sure we have the GNU programming environment on NERSC systems
+    prereq PrgEnv-gnu
 
-# this tells cmake it is OK to build/use shared libraries, otherwise
-# it errors out
-#setenv CRAYPE_LINK_TYPE dynamic
+    # this tells cmake it is OK to build/use shared libraries, otherwise
+    # it errors out
+    setenv CRAYPE_LINK_TYPE dynamic
+
+}
+
+# put the core of the install into the enviornment
+prepend-path PATH ${prefix}/bin/
+
+foreach lib {"lib" "lib64"} {
+
+    prepend-path LD_LIBRARY_PATH ${prefix}/${lib}
+    prepend-path PKG_CONFIG_PATH ${prefix}/${lib}/pkgconfig
+
+}
+
+# Check for Python
+if {[string compare "@ENABLE_PYTHON@" "ON"] == 0} {
+
+    # Check for Cray system
+    if {[string compare "@ENABLE_CRAY_MPICH@" "ON"] == 0} {
+
+        # make sure that NERSC's python installs are not in the environment
+        conflict python
+
+        # for headless(off screen) rendering in matplotlib on systems like NERSC Cori
+        # that do not run X11
+        setenv MPLBACKEND Agg
+
+        # prevent numpy from aborting during import on KNL nodes. When OpenBLAS detects
+        # more than 256 core(KNL nodes hav 272) it aborts.
+        setenv OPENBLAS_NUM_THREADS 1
+
+    }
+
+    # put our Python in the environment. this can cause problems for other
+    # installs because it overrides baked in paths in the interpreter instance.
+    #setenv PYTHONHOME ${prefix}
+
+    # set python's import paths
+    foreach lib {"lib" "lib64"} {
+
+        prepend-path PYTHONPATH ${prefix}/${lib}
+        prepend-path PYTHONPATH ${prefix}/${lib}/python${python_version}/site-packages/
+    }
+}
+
+# Check for NetCDF
+if {[string compare "@ENABLE_NETCDF@" "ON"] == 0} {
+
+    # Check for Cray system
+    if {[string compare "@ENABLE_CRAY_MPICH@" "ON"] == 0} {
+
+        # make sure that NERSC's NetCDF & HDF5 installs are not in the environment
+        conflict cray-netcdf
+        conflict cray-hdf5
+        conflict ncview
+        conflict cdo
+
+        # disable the HDF5 SWMR file locking scheme. this is currently unsupported on
+        # NERSC's CFS and we do not currently use SWMR.
+        setenv HDF5_USE_FILE_LOCKING FALSE
+
+    }
+}
