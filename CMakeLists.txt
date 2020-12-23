@@ -58,6 +58,7 @@ option(ENABLE_MATPLOTLIB "installs matplotlib via pip" ON)
 option(ENABLE_PYTORCH "installs pytorch via pip" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
+option(ENABLE_TECA_PROFILER "compiles TECA's profiler" OFF)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_OPENSSL "builds and installs OpenSSL" OFF)
@@ -660,6 +661,11 @@ if (ENABLE_TECA)
     else()
         message(STATUS "TECA test .............. Disabled")
     endif()
+    if (ENABLE_TECA_PROFILER)
+        message(STATUS "TECA profiler .......... Enabled")
+    else()
+        message(STATUS "TECA profiler .......... Disabled")
+    endif()
 
     # download and build TECA
     ExternalProject_Add(TECA
@@ -681,6 +687,7 @@ if (ENABLE_TECA)
             ${teca_flags} ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
             -DTECA_PYTHON_VERSION=3 -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            -DTECA_ENABLE_PROFILER=${ENABLE_TECA_PROFILER}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
         TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} || true
@@ -689,4 +696,5 @@ else()
     message(STATUS "TECA ................... Disabled")
     message(STATUS "TECA data .............. Disabled")
     message(STATUS "TECA test .............. Disabled")
+    message(STATUS "TECA profiler .......... Disabled")
 endif()
