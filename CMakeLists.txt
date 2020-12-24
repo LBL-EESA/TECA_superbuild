@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 project(TECA_superbuild)
 include(ExternalProject)
+include(version.cmake)
 
 # where various resources are housed and served
 set(TECA_URL "http://github.com/LBL-EESA/TECA"
@@ -38,6 +39,11 @@ set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(TECA_SOURCE develop CACHE STRING
     "branch to checkout from the TECA git repository")
 
+get_package_version(${PYTHON_SOURCE} Python PYTHON)
+get_package_version(${NUMPY_SOURCE} numpy NUMPY)
+get_package_version(${NETCDF_SOURCE} netcdf-c NETCDF)
+
+
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
@@ -52,6 +58,7 @@ option(ENABLE_MATPLOTLIB "installs matplotlib via pip" ON)
 option(ENABLE_PYTORCH "installs pytorch via pip" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
+option(ENABLE_TECA_PROFILER "compiles TECA's profiler" OFF)
 option(ENABLE_TECA_DATA "downloads the TECA test datasets" ON)
 option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_OPENSSL "builds and installs OpenSSL" OFF)
@@ -187,8 +194,9 @@ set(CTEST_FLAGS  --output-on-failure CACHE STRING
 # that should be used at run-time.
 set(py_env)
 if (ENABLE_PYTHON)
+
     set(py_env PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg
-        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python3.7/site-packages/)
+        PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/)
 endif()
 set(env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     "CPPFLAGS=${cpp_flags}" "CFLAGS=${c_flags}" "CXXFLAGS=${cxx_flags}" "LDFLAGS=${ld_flags}"
@@ -653,6 +661,11 @@ if (ENABLE_TECA)
     else()
         message(STATUS "TECA test .............. Disabled")
     endif()
+    if (ENABLE_TECA_PROFILER)
+        message(STATUS "TECA profiler .......... Enabled")
+    else()
+        message(STATUS "TECA profiler .......... Disabled")
+    endif()
 
     # download and build TECA
     ExternalProject_Add(TECA
@@ -674,6 +687,7 @@ if (ENABLE_TECA)
             ${teca_flags} ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
             -DTECA_PYTHON_VERSION=3 -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            -DTECA_ENABLE_PROFILER=${ENABLE_TECA_PROFILER}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
         TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} || true
@@ -682,4 +696,5 @@ else()
     message(STATUS "TECA ................... Disabled")
     message(STATUS "TECA data .............. Disabled")
     message(STATUS "TECA test .............. Disabled")
+    message(STATUS "TECA profiler .......... Disabled")
 endif()
