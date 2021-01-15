@@ -52,6 +52,9 @@ if {[string compare "@ENABLE_PYTHON@" "ON"] == 0} {
     # installs because it overrides baked in paths in the interpreter instance.
     #setenv PYTHONHOME ${prefix}
 
+    # clear out other potentially conflicting paths
+    setenv PYTHONPATH ""
+
     # set python's import paths
     foreach lib {"lib" "lib64"} {
 
