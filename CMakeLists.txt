@@ -39,10 +39,28 @@ set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(TECA_SOURCE 4.0.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
+# extract version numbers
 get_package_version(${PYTHON_SOURCE} Python PYTHON)
-get_package_version(${NUMPY_SOURCE} numpy NUMPY)
+get_package_version(${MPICH_SOURCE} mpich MPICH)
+get_package_version(${OPENMPI_SOURCE} openmpi OPENMPI)
+get_package_version(${ZLIB_SOURCE} zlib ZLIB)
+get_package_version(${OPENSSL_SOURCE} openssl OPENSSL)
+get_package_version(${EXPAT_SOURCE} expat EXPAT)
+get_package_version(${HDF5_SOURCE} hdf5 HDF5)
 get_package_version(${NETCDF_SOURCE} netcdf-c NETCDF)
-
+get_package_version(${UDUNITS_SOURCE} udunits UDUNITS)
+get_package_version(${BOOST_SOURCE} boost BOOST)
+get_package_version_2(${NCURSES_SOURCE} ncurses NCURSES)
+get_package_version_2(${LIBFFI_SOURCE} libffi LIBFFI)
+get_package_version_2(${READLINE_SOURCE} readline READLINE)
+get_package_version(${PYTHON_SOURCE} Python PYTHON)
+get_package_version_2(${PCRE_SOURCE} pcre PCRE)
+get_package_version(${SWIG_SOURCE} swig SWIG)
+get_package_version(${CYTHON_SOURCE} Cython CYTHON)
+get_package_version(${NUMPY_SOURCE} numpy NUMPY)
+get_package_version(${MPI4PY_SOURCE} mpi4py MPI4PY)
+set(MATPLOTLIB_VERSION 3.3.4)
+set(PYTORCH_VERSION 1.7.0+cpu)
 
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
@@ -194,7 +212,6 @@ set(CTEST_FLAGS  --output-on-failure CACHE STRING
 # that should be used at run-time.
 set(py_env)
 if (ENABLE_PYTHON)
-
     set(py_env PYTHONHOME=${CMAKE_INSTALL_PREFIX} MPLBACKEND=Agg
         PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib:${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/)
 endif()
@@ -221,15 +238,15 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/modulefiles/teca/${TECA_SOURCE}
 
 # Build MPICH if MPI is requested.
 if (NOT WITHOUT_MPI AND ENABLE_CRAY_MPICH)
-    message(STATUS "MPICH .................. Disabled")
-    message(STATUS "Cray MPICH ............. Enabled")
-    message(STATUS "OpenMPI ................ Disabled")
+    build_status(MPICH ${MPICH_VERSION} Disabled)
+    build_status("Cray MPICH" "x" Enabled)
+    build_status(OpenMPI ${OPENMPI_VERSION} Disabled)
     list(APPEND teca_flags "-DENABLE_CRAY_MPICH=ON")
     list(APPEND teca_flags "-DREQUIRE_MPI=TRUE")
 elseif (NOT WITHOUT_MPI AND ENABLE_MPICH)
-    message(STATUS "MPICH .................. Enabled")
-    message(STATUS "Cray MPICH ............. Disabled")
-    message(STATUS "OpenMPI ................ Disabled")
+    build_status(MPICH ${MPICH_VERSION} Enabled)
+    build_status("Cray MPICH" "x" Disabled)
+    build_status(OpenMPI ${OPENMPI_VERSION} Disabled)
     list(APPEND teca_flags "-DREQUIRE_MPI=TRUE")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -239,9 +256,9 @@ elseif (NOT WITHOUT_MPI AND ENABLE_MPICH)
             --prefix=${CMAKE_INSTALL_PREFIX} --disable-maintainer-mode --enable-threads=multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
-    message(STATUS "MPICH .................. Disabled")
-    message(STATUS "Cray MPICH ............. Disabled")
-    message(STATUS "OpenMPI ................ Enabled")
+    build_status(MPICH ${MPICH_VERSION} Disabled)
+    build_status("Cray MPICH" "x" Disabled)
+    build_status(OpenMPI ${OPENMPI_VERSION} Enabled)
     list(APPEND teca_flags "-DREQUIRE_MPI=TRUE")
     ExternalProject_Add(mpi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -251,14 +268,14 @@ elseif (NOT WITHOUT_MPI AND ENABLE_OPENMPI)
             --prefix=${CMAKE_INSTALL_PREFIX} --enable-mpi-thread-multiple
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "MPICH .................. Disabled")
-    message(STATUS "Cray MPICH ............. Disabled")
-    message(STATUS "OpenMPI ................ Disabled")
+    build_status(MPICH ${MPICH_VERSION} Disabled)
+    build_status("Cray MPICH" "x" Disabled)
+    build_status(OpenMPI ${OPENMPI_VERSION} Disabled)
 endif()
 
 # zlib
 if (ENABLE_PYTHON OR ENABLE_NETCDF OR ENABLE_LIBXLSXWRITER OR ENABLE_OPENSSL)
-    message(STATUS "zlib ................... Enabled")
+    build_status(zlib ${ZLIB_VERSION} Enabled)
     ExternalProject_Add(zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${ZLIB_SOURCE}.tar.gz
@@ -268,12 +285,12 @@ if (ENABLE_PYTHON OR ENABLE_NETCDF OR ENABLE_LIBXLSXWRITER OR ENABLE_OPENSSL)
             --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "zlib ................... Disabled")
+    build_status(zlib ${ZLIB_VERSION} Disabled)
 endif()
 
 # OpenSSL
 if (ENABLE_OPENSSL)
-    message(STATUS "OpenSSL ................ Enabled")
+    build_status(OpenSSL ${OPENSSL_VERSION} Enabled)
     list(APPEND teca_deps openssl)
     ExternalProject_Add(openssl
         DEPENDS zlib
@@ -285,12 +302,12 @@ if (ENABLE_OPENSSL)
             enable-ssl3 enable-ssl3-method --prefix=${CMAKE_INSTALL_PREFIX} ${c_flags}
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "OpenSSL ................ Disabled")
+    build_status(OpenSSL ${OPENSSL_VERSION} Disabled)
 endif()
 
 # expat
 if (ENABLE_EXPAT)
-    message(STATUS "expat .................. Enabled")
+    build_status(expat ${EXPAT_VERSION} Enabled)
     ExternalProject_Add(expat
         DEPENDS zlib
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -300,14 +317,14 @@ if (ENABLE_EXPAT)
             --prefix=${CMAKE_INSTALL_PREFIX} --enable-shared --without-xmlwf --without-docbook
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "expat .................. Disabled")
+    build_status(expat ${EXPAT_VERSION} Disabled)
 endif()
 
 # NetCDF group
 if (ENABLE_NETCDF)
     # Build the HDF5 parallel I/O library.
     # for thread safety add: --enable-unsupported --enable-threadsafe
-    message(STATUS "HDF5 ................... Enabled")
+    build_status(HDF5 ${HDF5_VERSION} Enabled)
     set(hdf5_deps zlib)
     set(HDF5_CONFIG_FLAGS --enable-hl --enable-build-mode=production)
     if (NOT WITHOUT_MPI)
@@ -329,7 +346,7 @@ if (ENABLE_NETCDF)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build NetCDF.${CMAKE_C_COMPILER} ${CMAKE_CXX_COMPILER}
-    message(STATUS "NetCDF ................. Enabled")
+    build_status(NetCDF ${NETCDF_VERSION} Enabled)
     list(APPEND teca_deps netcdf)
     list(APPEND teca_flags "-DREQUIRE_NETCDF=TRUE")
     ExternalProject_Add(netcdf
@@ -342,13 +359,13 @@ if (ENABLE_NETCDF)
           --enable-netcdf-4 --enable-parallel4
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "HDF5 ................... Disabled")
-    message(STATUS "NetCDF ................. Disabled")
+    build_status(HDF5 ${HDF5_VERSION} Disabled)
+    build_status(NetCDF ${NETCDF_VERSION} Disabled)
 endif()
 
 # Build UDUnits.
 if (ENABLE_UDUNITS)
-    message(STATUS "UDUNITS ................ Enabled")
+    build_status(UDUNITS ${UDUNITS_VERSION} Enabled)
     list(APPEND teca_deps udunits)
     list(APPEND teca_flags "-DREQUIRE_UDUNITS=TRUE")
     ExternalProject_Add(udunits
@@ -369,12 +386,12 @@ if (ENABLE_UDUNITS)
             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "UDUNITS ................ Disabled")
+    build_status(UDUNITS ${UDUNITS_VERSION} Disabled)
 endif()
 
 # Build Boost.
 if (ENABLE_BOOST)
-    message(STATUS "Boost .................. Enabled")
+    build_status(Boost ${BOOST_VERSION} Enabled)
     list(APPEND teca_deps boost)
     list(APPEND teca_flags "-DREQUIRE_BOOST=TRUE")
     if (APPLE AND ((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR
@@ -395,14 +412,14 @@ if (ENABLE_BOOST)
         INSTALL_COMMAND ./b2 install --prefix=${CMAKE_INSTALL_PREFIX}
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
-    message(STATUS "Boost .................. Disabled")
+    build_status(Boost ${BOOST_VERSION} Disabled)
 endif()
 
 # Python group
 if (ENABLE_PYTHON)
     set(py_deps ncurses zlib libffi)
     # ncurses
-    message(STATUS "ncurses ................ Enabled")
+    build_status(ncurses ${NCURSES_VERSION} Enabled)
     ExternalProject_Add(ncurses
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${NCURSES_SOURCE}.tar.gz
@@ -412,7 +429,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # libffi
-    message(STATUS "libffi ................. Enabled")
+    build_status(libffi ${LIBFFI_VERSION} Enabled)
     ExternalProject_Add(libffi
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${LIBFFI_SOURCE}.tar.gz
@@ -424,7 +441,7 @@ if (ENABLE_PYTHON)
     # readline
     if (ENABLE_READLINE)
         list(APPEND py_deps readline)
-        message(STATUS "readline ............... Enabled")
+        build_status(readline ${READLINE_VERSION} Enabled)
         ExternalProject_Add(readline
             DEPENDS ncurses
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -434,11 +451,11 @@ if (ENABLE_PYTHON)
                 --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
     else()
-        message(STATUS "readline ............... Disabled")
+        build_status(readline ${READLINE_VERSION} Disabled)
     endif()
 
     # Build Python.
-    message(STATUS "Python ................. Enabled")
+    build_status(Python ${PYTHON_VERSION} Enabled)
     list(APPEND teca_flags "-DREQUIRE_PYTHON=TRUE")
     ExternalProject_Add(Python
         DEPENDS ${py_deps}
@@ -451,7 +468,7 @@ if (ENABLE_PYTHON)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # pcre
-    message(STATUS "pcre ................... Enabled")
+    build_status(pcre ${PCRE_VERSION} Enabled)
     ExternalProject_Add(pcre
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
         URL ${TECA_DEPS_URL}/${PCRE_SOURCE}.tar.gz
@@ -461,7 +478,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Swig.
-    message(STATUS "SWIG ................... Enabled")
+    build_status(SWIG ${SWIG_VERSION} Enabled)
     list(APPEND teca_deps SWIG)
     ExternalProject_Add(SWIG
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -474,7 +491,7 @@ if (ENABLE_PYTHON)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 
     # Build Cython.
-    message(STATUS "Cython ................. Enabled")
+    build_status(Cython ${CYTHON_VERSION} Enabled)
     ExternalProject_Add(Cython
         DEPENDS Python
         DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -487,7 +504,7 @@ if (ENABLE_PYTHON)
         BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
 
     # Build numpy.
-    message(STATUS "NumPy .................. Enabled")
+    build_status(NumPy ${NUMPY_VERSION} Enabled)
     list(APPEND teca_deps numpy)
     ExternalProject_Add(numpy
         DEPENDS Python Cython
@@ -520,7 +537,7 @@ if (ENABLE_PYTHON)
             string(REPLACE ";" " " MPI4PY_CFLAGS "${CRAY_MPICH_CFLAGS}")
         endif()
         configure_file(mpi4py.cfg.in mpi4py.cfg)
-        message(STATUS "mpi4py ................. Enabled")
+        build_status(mpi4py ${MPI4PY_VERSION} Enabled)
         list(APPEND teca_deps mpi4py)
         ExternalProject_Add(mpi4py
             DEPENDS ${mpi4py_deps}
@@ -536,12 +553,12 @@ if (ENABLE_PYTHON)
             install --prefix=${CMAKE_INSTALL_PREFIX}
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1 LOG_INSTALL 1)
     else()
-        message(STATUS "mpi4py ................. Disabled")
+        build_status(mpi4py ${MPI4PY_VERSION} Disabled)
     endif()
 
     if (ENABLE_MATPLOTLIB)
         # install matplotlib
-        message(STATUS "matplotlib ............. Enabled")
+        build_status(matplotlib ${MATPLOTLIB_VERSION} Enabled)
         list(APPEND teca_deps matplotlib)
         ExternalProject_Add(matplotlib
             DEPENDS Python numpy
@@ -549,16 +566,16 @@ if (ENABLE_PYTHON)
             SOURCE_DIR ${PROJECT_BINARY_DIR}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                -mpip install matplotlib==3.3.4
+                -mpip install matplotlib==${MATPLOTLIB_VERSION}
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
-        message(STATUS "matplotlib ............. Disabled")
+        build_status(matplotlib ${MATPLOTLIB_VERSION} Disabled)
     endif()
 
     if (ENABLE_PYTORCH)
         # install pytorch
-        message(STATUS "pytorch ................ Enabled")
+        build_status(pytorch ${PYTORCH_VERSION} Enabled)
         list(APPEND teca_deps pytorch)
         ExternalProject_Add(pytorch
             DEPENDS Python numpy
@@ -571,21 +588,22 @@ if (ENABLE_PYTHON)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
-        message(STATUS "pytorch ................ Disabled")
+        build_status(pytorch ${PYTORCH_VERSION} Disabled)
     endif()
 
 
 else()
-    message(STATUS "ncurses ................ Disabled")
-    message(STATUS "libffi ................. Disabled")
-    message(STATUS "Python ................. Disabled")
-    message(STATUS "pcre ................... Disabled")
-    message(STATUS "SWIG ................... Disabled")
-    message(STATUS "Cython ................. Disabled")
-    message(STATUS "NumPy .................. Disabled")
-    message(STATUS "mpi4py ................. Disabled")
-    message(STATUS "matplotlib ............. Disabled")
-    message(STATUS "pytorch ................ Disabled")
+    build_status(ncurses ${NCURSES_VERSION} Disabled)
+    build_status(libffi ${LIBFFI_VERSION} Disabled)
+    build_status(readline ${READLINE_VERSION} Disabled)
+    build_status(Python ${PYTHON_VERSION} Disabled)
+    build_status(pcre ${PCRE_VERSION} Disabled)
+    build_status(SWIG ${SWIG_VERSION} Disabled)
+    build_status(Cython ${CYTHON_VERSION} Disabled)
+    build_status(NumPy ${NUMPY_VERSION} Disabled)
+    build_status(mpi4py ${MPI4PY_VERSION} Disabled)
+    build_status(matplotlib ${MATPLOTLIB_VERSION} Disabled)
+    build_status(pytorch ${PYTORCH_VERSION} Disabled)
 endif()
 
 # Build libxlsxwriter.
@@ -619,8 +637,7 @@ endif()
 
 # TECA proper
 if (ENABLE_TECA)
-    message(STATUS "TECA ................... Enabled")
-
+    build_status(TECA ${TECA_SOURCE} Enabled)
     # download the regression test data
     set(TECA_DATA_REV "-rHEAD")
     set(TECA_DATA_UPDATE svn update)
@@ -646,7 +663,7 @@ if (ENABLE_TECA)
     endif()
     set(tmp)
     if (ENABLE_TECA_DATA)
-        message(STATUS "TECA data .............. Enabled")
+        build_status(TECA_data ${TECA_DATA_REV} Enabled)
         list(APPEND teca_deps TECA_data)
         ExternalProject_Add(TECA_data
             DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
@@ -657,13 +674,13 @@ if (ENABLE_TECA)
             INSTALL_COMMAND "" LOG_DOWNLOAD 1)
         set(tmp ${PROJECT_BINARY_DIR}/TECA_data-prefix/src/TECA_data)
     else()
-        message(STATUS "TECA data .............. Disabled")
+        build_status(TECA_data ${TECA_DATA_REV} Disabled)
     endif()
     set(TECA_DATA_ROOT ${tmp} CACHE PATH "Path to TECA regression test data")
     if (ENABLE_TECA_TEST)
-        message(STATUS "TECA test .............. Enabled")
+        message(STATUS "TECA tests ............. Enabled")
     else()
-        message(STATUS "TECA test .............. Disabled")
+        message(STATUS "TECA tests ............. Disabled")
     endif()
     if (ENABLE_TECA_PROFILER)
         message(STATUS "TECA profiler .......... Enabled")
@@ -697,8 +714,8 @@ if (ENABLE_TECA)
         TEST_COMMAND env ${env} ctest ${CTEST_FLAGS} || true
         LOG_DOWNLOAD 1 LOG_CONFIGURE 0 LOG_BUILD 0 LOG_INSTALL 0)
 else()
-    message(STATUS "TECA ................... Disabled")
-    message(STATUS "TECA data .............. Disabled")
-    message(STATUS "TECA test .............. Disabled")
+    build_status(TECA ${TECA_SOURCE} Disabled)
+    message(STATUS "TECA_data .............. Disabled")
+    message(STATUS "TECA tests ............. Disabled")
     message(STATUS "TECA profiler .......... Disabled")
 endif()
