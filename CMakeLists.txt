@@ -15,6 +15,7 @@ set(TECA_DEPS_URL "https://sourceforge.net/projects/teca/files/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
 set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
+set(SHAPELIB_URL https://github.com/OSGeo/shapelib.git)
 
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.3.1)
@@ -36,6 +37,7 @@ set(CYTHON_SOURCE Cython-0.29.21)
 set(NUMPY_SOURCE numpy-1.19.1)
 set(MPI4PY_SOURCE mpi4py-3.0.3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
+set(SHAPELIB_SOURCE 21ae8fc16)
 set(TECA_SOURCE 4.0.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
@@ -65,6 +67,7 @@ set(PYTORCH_VERSION 1.7.0+cpu)
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
+option(ENABLE_SHAPELIB "builds and installs OSGeo shapelib" ON)
 option(ENABLE_MPICH "builds and installs MPICH MPI" OFF)
 option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" ON)
 option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
@@ -633,6 +636,34 @@ if (ENABLE_LIBXLSXWRITER)
         LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
 else()
     message(STATUS "LIBXLSXWRITER .......... Disabled")
+endif()
+
+# Build libxlsxwriter.
+if (ENABLE_SHAPELIB)
+    message(STATUS "shapelib ............... Enabled")
+    list(APPEND teca_deps shapelib)
+    list(APPEND teca_flags "-DREQUIRE_SHAPELIB=TRUE")
+    ExternalProject_Add(shapelib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        #URL ${TECA_DEPS_URL}/${SHAPELIB_SOURCE}.tar.gz
+        GIT_REPOSITORY ${SHAPELIB_URL}
+        GIT_TAG ${SHAPELIB_SOURCE}
+        UPDATE_COMMAND ""
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${SHAPELIB_SOURCE}
+        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            "-DCMAKE_C_FLAGS=${c_flags}"
+            "-DCMAKE_C_FLAGS_DEBUG=${c_flags}"
+            "-DCMAKE_C_FLAGS_RELEASE=${c_flags}"
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            "-DCMAKE_CXX_FLAGS=${cxx_flags}"
+            "-DCMAKE_CXX_FLAGS_DEBUG=${cxx_flags}"
+            "-DCMAKE_CXX_FLAGS_RELEASE=${cxx_flags}"
+            "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+else()
+    message(STATUS "shapelib ............... Disabled")
 endif()
 
 # TECA proper
