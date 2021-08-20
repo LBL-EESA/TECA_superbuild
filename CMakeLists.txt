@@ -38,7 +38,7 @@ set(NUMPY_SOURCE numpy-1.19.1)
 set(MPI4PY_SOURCE mpi4py-3.0.3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(SHAPELIB_SOURCE 21ae8fc16)
-set(TECA_SOURCE 4.0.0 CACHE STRING
+set(TECA_SOURCE 4.1.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # extract version numbers
