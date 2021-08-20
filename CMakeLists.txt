@@ -38,7 +38,7 @@ set(NUMPY_SOURCE numpy-1.19.1)
 set(MPI4PY_SOURCE mpi4py-3.0.3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
 set(SHAPELIB_SOURCE 21ae8fc16)
-set(TECA_SOURCE 4.0.0 CACHE STRING
+set(TECA_SOURCE 4.1.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # extract version numbers
@@ -62,6 +62,7 @@ get_package_version(${CYTHON_SOURCE} Cython CYTHON)
 get_package_version(${NUMPY_SOURCE} numpy NUMPY)
 get_package_version(${MPI4PY_SOURCE} mpi4py MPI4PY)
 set(MATPLOTLIB_VERSION 3.3.4)
+set(TCPYPI_VERSION 1.3.4)
 set(PYTORCH_VERSION 1.7.0+cpu)
 
 # enable/disable each piece, all on by default
@@ -76,6 +77,7 @@ option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_READLINE "builds and installs readline" OFF)
 option(ENABLE_MATPLOTLIB "installs matplotlib via pip" ON)
+option(ENABLE_TCPYPI "installs tcpyPI via pip" ON)
 option(ENABLE_PYTORCH "installs pytorch via pip" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
@@ -594,7 +596,35 @@ if (ENABLE_PYTHON)
         build_status(pytorch ${PYTORCH_VERSION} Disabled)
     endif()
 
+    if (ENABLE_TCPYPI)
+        # install tcpyPI
+        build_status(tcpyPI ${TCPYPI_VERSION} Enabled)
+        list(APPEND teca_deps tcpyPI)
 
+        # numba
+        ExternalProject_Add(numba
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install numba==0.53.1
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+
+        # tcpyPI
+        ExternalProject_Add(tcpyPI
+            DEPENDS Python numpy numba
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install tcpyPI==${TCPYPI_VERSION} --no-dependencies
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+    else()
+        build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
+    endif()
 else()
     build_status(ncurses ${NCURSES_VERSION} Disabled)
     build_status(libffi ${LIBFFI_VERSION} Disabled)
