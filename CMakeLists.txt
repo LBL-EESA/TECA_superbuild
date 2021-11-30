@@ -63,7 +63,9 @@ get_package_version(${NUMPY_SOURCE} numpy NUMPY)
 get_package_version(${MPI4PY_SOURCE} mpi4py MPI4PY)
 set(MATPLOTLIB_VERSION 3.3.4)
 set(TCPYPI_VERSION 1.3.4)
-set(PYTORCH_VERSION 1.7.0+cpu)
+set(TORCH_VERSION 1.10.0)
+set(TORCHAUDIO_VERSION 0.10.0)
+set(TORCHVISION_VERSION 0.11.1)
 
 # enable/disable each piece, all on by default
 option(ENABLE_BOOST "builds and installs Boost" ON)
@@ -580,8 +582,13 @@ if (ENABLE_PYTHON)
     endif()
 
     if (ENABLE_PYTORCH)
+        if (ENABLE_CUDA)
+            set(PYTORCH_DEV cu113)
+        else()
+            set(PYTORCH_DEV cpu)
+        endif()
         # install pytorch
-        build_status(pytorch ${PYTORCH_VERSION} Enabled)
+        build_status(pytorch "${TORCH_VERSION}+${PYTORCH_DEV}" Enabled)
         list(APPEND teca_deps pytorch)
         ExternalProject_Add(pytorch
             DEPENDS Python numpy
@@ -589,12 +596,14 @@ if (ENABLE_PYTHON)
             SOURCE_DIR ${PROJECT_BINARY_DIR}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                -mpip install torch==1.7.0+cpu torchvision==0.8.1+cpu torchaudio==0.7.0
-                -f https://download.pytorch.org/whl/torch_stable.html
+                -mpip install torch==${TORCH_VERSION}+${PYTORCH_DEV}
+                torchvision==${TORCHVISION_VERSION}+${PYTORCH_DEV}
+                torchaudio==${TORCHAUDIO_VERSION}+${PYTORCH_DEV}
+                -f https://download.pytorch.org/whl/${PYTORCH_DEV}/torch_stable.html
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
-        build_status(pytorch ${PYTORCH_VERSION} Disabled)
+        build_status(pytorch ${TORCH_VERSION} Disabled)
     endif()
 
     if (ENABLE_TCPYPI)
