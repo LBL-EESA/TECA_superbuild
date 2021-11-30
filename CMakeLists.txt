@@ -66,8 +66,10 @@ set(TCPYPI_VERSION 1.3.4)
 set(TORCH_VERSION 1.10.0)
 set(TORCHAUDIO_VERSION 0.10.0)
 set(TORCHVISION_VERSION 0.11.1)
+set(CUPY_VERSION cuda113)
 
 # enable/disable each piece, all on by default
+option(ENABLE_CUDA "configures for use with CUDA" OFF)
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
 option(ENABLE_SHAPELIB "builds and installs OSGeo shapelib" ON)
@@ -89,7 +91,6 @@ option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_OPENSSL "builds and installs OpenSSL" OFF)
 option(ENABLE_EXPAT "builds and installs expat" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
-option(ENABLE_CUDA "configures for use with CUDA" OFF)
 
 # the list of enabled dependencies
 set(teca_deps)
@@ -635,6 +636,24 @@ if (ENABLE_PYTHON)
     else()
         build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
     endif()
+
+    if (ENABLE_CUDA)
+        # install cupy
+        build_status(cupy ${CUPY_VERSION} Enabled)
+        list(APPEND teca_deps cupy)
+        ExternalProject_Add(cupy
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install cupy-${CUPY_VERSION}
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+    else()
+        build_status(cupy ${CUPY_VERSION} Disabled)
+    endif()
+
 else()
     build_status(ncurses ${NCURSES_VERSION} Disabled)
     build_status(libffi ${LIBFFI_VERSION} Disabled)
@@ -647,6 +666,8 @@ else()
     build_status(mpi4py ${MPI4PY_VERSION} Disabled)
     build_status(matplotlib ${MATPLOTLIB_VERSION} Disabled)
     build_status(pytorch ${PYTORCH_VERSION} Disabled)
+    build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
+    build_status(cupy ${CUPY_VERSION} Disabled)
 endif()
 
 # Build libxlsxwriter.
