@@ -87,6 +87,7 @@ option(ENABLE_UDUNITS "builds and installs UDUNITS" ON)
 option(ENABLE_OPENSSL "builds and installs OpenSSL" OFF)
 option(ENABLE_EXPAT "builds and installs expat" ON)
 option(ENABLE_MEMCHECK "configures for use with valgrind" OFF)
+option(ENABLE_CUDA "configures for use with CUDA" OFF)
 
 # the list of enabled dependencies
 set(teca_deps)
@@ -773,6 +774,7 @@ if (ENABLE_TECA)
             ${teca_flags} ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
             -DTECA_PYTHON_VERSION=3 -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            -DREQUIRE_CUDA=${ENABLE_CUDA}
             -DTECA_ENABLE_PROFILER=${ENABLE_TECA_PROFILER}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
