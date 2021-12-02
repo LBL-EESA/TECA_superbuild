@@ -19,7 +19,7 @@ set -e
 
 # get the root of the install
 TECA_REV=`git ls-remote git@github.com:LBL-EESA/TECA.git | grep ${TECA_SOURCE} |  cut -c1-8`
-: ${TECA_PREFIX:=/global/common/software/m1517/teca}
+: ${TECA_PREFIX:=/global/common/software/m1517/teca/cori}
 : ${PREFIX:=${TECA_PREFIX}/${TECA_SOURCE}-${TECA_REV}}
 
 # mark as dependency only
