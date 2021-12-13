@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # load the gcc environment
-module swap PrgEnv-nvidia PrgEnv-gnu
+module load PrgEnv-gnu
+module load cudatoolkit
 module load cpe-cuda
 module load cmake
 

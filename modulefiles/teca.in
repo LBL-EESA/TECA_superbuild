@@ -16,6 +16,7 @@ if {[string compare "@ENABLE_CRAY_MPICH@" "ON"] == 0} {
     # make sure we have CUDA gcc compiler modules loaded
     if {[string compare "@ENABLE_CUDA@" "ON"] == 0} {
 
+        prereq cudatoolkit
         prereq cpe-cuda
 
     }
