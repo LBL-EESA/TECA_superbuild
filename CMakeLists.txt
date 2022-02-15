@@ -63,9 +63,13 @@ get_package_version(${NUMPY_SOURCE} numpy NUMPY)
 get_package_version(${MPI4PY_SOURCE} mpi4py MPI4PY)
 set(MATPLOTLIB_VERSION 3.3.4)
 set(TCPYPI_VERSION 1.3.4)
-set(PYTORCH_VERSION 1.7.0+cpu)
+set(TORCH_VERSION 1.10.0)
+set(TORCHAUDIO_VERSION 0.10.0)
+set(TORCHVISION_VERSION 0.11.1)
+set(CUPY_VERSION cuda113)
 
 # enable/disable each piece, all on by default
+option(ENABLE_CUDA "configures for use with CUDA" OFF)
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
 option(ENABLE_SHAPELIB "builds and installs OSGeo shapelib" ON)
@@ -579,8 +583,13 @@ if (ENABLE_PYTHON)
     endif()
 
     if (ENABLE_PYTORCH)
+        if (ENABLE_CUDA)
+            set(PYTORCH_DEV cu113)
+        else()
+            set(PYTORCH_DEV cpu)
+        endif()
         # install pytorch
-        build_status(pytorch ${PYTORCH_VERSION} Enabled)
+        build_status(pytorch "${TORCH_VERSION}+${PYTORCH_DEV}" Enabled)
         list(APPEND teca_deps pytorch)
         ExternalProject_Add(pytorch
             DEPENDS Python numpy
@@ -588,12 +597,14 @@ if (ENABLE_PYTHON)
             SOURCE_DIR ${PROJECT_BINARY_DIR}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                -mpip install torch==1.7.0+cpu torchvision==0.8.1+cpu torchaudio==0.7.0
-                -f https://download.pytorch.org/whl/torch_stable.html
+                -mpip install torch==${TORCH_VERSION}+${PYTORCH_DEV}
+                torchvision==${TORCHVISION_VERSION}+${PYTORCH_DEV}
+                torchaudio==${TORCHAUDIO_VERSION}+${PYTORCH_DEV}
+                -f https://download.pytorch.org/whl/${PYTORCH_DEV}/torch_stable.html
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
-        build_status(pytorch ${PYTORCH_VERSION} Disabled)
+        build_status(pytorch ${TORCH_VERSION} Disabled)
     endif()
 
     if (ENABLE_TCPYPI)
@@ -625,6 +636,24 @@ if (ENABLE_PYTHON)
     else()
         build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
     endif()
+
+    if (ENABLE_CUDA)
+        # install cupy
+        build_status(cupy ${CUPY_VERSION} Enabled)
+        list(APPEND teca_deps cupy)
+        ExternalProject_Add(cupy
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install cupy-${CUPY_VERSION}
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+    else()
+        build_status(cupy ${CUPY_VERSION} Disabled)
+    endif()
+
 else()
     build_status(ncurses ${NCURSES_VERSION} Disabled)
     build_status(libffi ${LIBFFI_VERSION} Disabled)
@@ -637,6 +666,8 @@ else()
     build_status(mpi4py ${MPI4PY_VERSION} Disabled)
     build_status(matplotlib ${MATPLOTLIB_VERSION} Disabled)
     build_status(pytorch ${PYTORCH_VERSION} Disabled)
+    build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
+    build_status(cupy ${CUPY_VERSION} Disabled)
 endif()
 
 # Build libxlsxwriter.
@@ -773,6 +804,7 @@ if (ENABLE_TECA)
             ${teca_flags} ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
             -DTECA_PYTHON_VERSION=3 -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            -DREQUIRE_CUDA=${ENABLE_CUDA}
             -DTECA_ENABLE_PROFILER=${ENABLE_TECA_PROFILER}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
