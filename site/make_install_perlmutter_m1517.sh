@@ -1,17 +1,29 @@
 #!/bin/bash
 
+# show what the script is doing and error out if any command fails
+set -e
+#set -x
+
+# is this for the CPU partition or GPU ?
+: ${ENABLE_CUDA:=ON}
+if [[ "${ENABLE_CUDA}" == "ON" ]]
+then
+    PARTITION=gpu
+else
+    PARTITION=cpu
+fi
+
 # load the gcc environment
 module load PrgEnv-gnu
-module load cudatoolkit
-module load cpe-cuda
+if [[ "${ENABLE_CUDA}" == "ON" ]]
+then
+    module load cudatoolkit
+    module load cpe-cuda
+fi
 module load cmake
 
 # mpich is not in the pkg-config path on Cori
 export PKG_CONFIG_PATH=${CRAY_MPICH_DIR}/lib/pkgconfig:${PKG_CONFIG_PATH}
-
-# show what the script is doing and error out if any command fails
-set -e
-#set -x
 
 # choose the branch or tag to compile.
 : ${TECA_SOURCE:=develop}
@@ -21,7 +33,7 @@ set -e
 
 # get the root of the install
 TECA_REV=`git ls-remote git@github.com:LBL-EESA/TECA.git | grep ${TECA_SOURCE} |  cut -c1-8`
-: ${TECA_PREFIX:=/global/common/software/m1517/perlmutter/teca}
+: ${TECA_PREFIX:=/global/common/software/m1517/teca/perlmutter_${PARTITION}}
 : ${PREFIX:=${TECA_PREFIX}/${TECA_SOURCE}-${TECA_REV}}
 
 # mark as dependency only
@@ -31,10 +43,11 @@ then
     PREFIX=${PREFIX}-deps
 fi
 
-BUILD_DIR=build-${TECA_SOURCE}-${TECA_REV}
+BUILD_DIR=build-${PARTITION}-${TECA_SOURCE}-${TECA_REV}
 
 echo "TECA is ${ENABLE_TECA}"
 echo "building ${TECA_SOURCE}"
+echo "CUDA is ${ENABLE_CUDA}"
 echo "build in ${BUILD_DIR}"
 echo "install to ${PREFIX}"
 
@@ -102,7 +115,7 @@ cmake \
   -DCMAKE_BUILD_TYPE=Release \
   -DTECA_SOURCE=${TECA_SOURCE} \
   -DCMAKE_INSTALL_PREFIX=${PREFIX} \
-  -DENABLE_CUDA=ON \
+  -DENABLE_CUDA=${ENABLE_CUDA} \
   -DENABLE_MPICH=OFF \
   -DENABLE_OPENMPI=OFF \
   -DENABLE_CRAY_MPICH=ON \
