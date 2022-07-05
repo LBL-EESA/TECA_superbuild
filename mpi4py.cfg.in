@@ -30,3 +30,25 @@ runtime_library_dirs = @CMAKE_INSTALL_PREFIX@/lib
 extra_compile_args   = @CMAKE_C_FLAGS@ @MPI4PY_CFLAGS@
 extra_link_args      = @MPI4PY_LDFLAGS@
 extra_objects        =
+
+[perlmutter]
+mpicc                = @CMAKE_C_COMPILER@
+mpicxx               = @CMAKE_CXX_COMPILER@
+include_dirs         = @CMAKE_INSTALL_PREFIX@/include
+libraries            =
+library_dirs         =
+runtime_library_dirs = @CMAKE_INSTALL_PREFIX@/lib
+extra_compile_args   = @CMAKE_C_FLAGS@ @MPI4PY_CFLAGS@
+extra_link_args      = @MPI4PY_LDFLAGS@
+extra_objects        =
+
+[bigred200]
+mpicc                = @CMAKE_C_COMPILER@
+mpicxx               = @CMAKE_CXX_COMPILER@
+include_dirs         = @CMAKE_INSTALL_PREFIX@/include
+libraries            =
+library_dirs         =
+runtime_library_dirs = @CMAKE_INSTALL_PREFIX@/lib
+extra_compile_args   = @CMAKE_C_FLAGS@ @MPI4PY_CFLAGS@
+extra_link_args      = @MPI4PY_LDFLAGS@
+extra_objects        =

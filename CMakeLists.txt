@@ -15,6 +15,7 @@ set(TECA_DEPS_URL "https://sourceforge.net/projects/teca/files/TECA_deps"
     CACHE STRING "URL to the dependency tarballs")
 
 set(LIBXLSXWRITER_URL http://github.com/burlen/libxlsxwriter.git)
+set(SHAPELIB_URL https://github.com/OSGeo/shapelib.git)
 
 # The following versions of each library are installed by this script:
 set(MPICH_SOURCE mpich-3.3.1)
@@ -36,7 +37,8 @@ set(CYTHON_SOURCE Cython-0.29.21)
 set(NUMPY_SOURCE numpy-1.19.1)
 set(MPI4PY_SOURCE mpi4py-3.0.3)
 set(LIBXLSXWRITER_SOURCE cmake_configure)
-set(TECA_SOURCE 4.0.0 CACHE STRING
+set(SHAPELIB_SOURCE 21ae8fc16)
+set(TECA_SOURCE 5.0.0 CACHE STRING
     "branch to checkout from the TECA git repository")
 
 # extract version numbers
@@ -60,11 +62,17 @@ get_package_version(${CYTHON_SOURCE} Cython CYTHON)
 get_package_version(${NUMPY_SOURCE} numpy NUMPY)
 get_package_version(${MPI4PY_SOURCE} mpi4py MPI4PY)
 set(MATPLOTLIB_VERSION 3.3.4)
-set(PYTORCH_VERSION 1.7.0+cpu)
+set(TCPYPI_VERSION 1.3.4)
+set(TORCH_VERSION 1.10.0)
+set(TORCHAUDIO_VERSION 0.10.0)
+set(TORCHVISION_VERSION 0.11.1)
+set(CUPY_VERSION cuda113)
 
 # enable/disable each piece, all on by default
+option(ENABLE_CUDA "configures for use with CUDA" OFF)
 option(ENABLE_BOOST "builds and installs Boost" ON)
 option(ENABLE_LIBXLSXWRITER "builds and installs libxlsxwriter" ON)
+option(ENABLE_SHAPELIB "builds and installs OSGeo shapelib" ON)
 option(ENABLE_MPICH "builds and installs MPICH MPI" OFF)
 option(ENABLE_OPENMPI "builds and installs OpenMPI MPI" ON)
 option(ENABLE_CRAY_MPICH "Auto detect MPICH configuration for Cray systems" OFF)
@@ -73,6 +81,7 @@ option(ENABLE_NETCDF "builds and installs NetCDF group" ON)
 option(ENABLE_PYTHON "builds and installs Python group" ON)
 option(ENABLE_READLINE "builds and installs readline" OFF)
 option(ENABLE_MATPLOTLIB "installs matplotlib via pip" ON)
+option(ENABLE_TCPYPI "installs tcpyPI via pip" ON)
 option(ENABLE_PYTORCH "installs pytorch via pip" ON)
 option(ENABLE_TECA "builds and installs TECA" ON)
 option(ENABLE_TECA_TEST "runs the TECA regression tests" ON)
@@ -574,8 +583,13 @@ if (ENABLE_PYTHON)
     endif()
 
     if (ENABLE_PYTORCH)
+        if (ENABLE_CUDA)
+            set(PYTORCH_DEV cu113)
+        else()
+            set(PYTORCH_DEV cpu)
+        endif()
         # install pytorch
-        build_status(pytorch ${PYTORCH_VERSION} Enabled)
+        build_status(pytorch "${TORCH_VERSION}+${PYTORCH_DEV}" Enabled)
         list(APPEND teca_deps pytorch)
         ExternalProject_Add(pytorch
             DEPENDS Python numpy
@@ -583,14 +597,62 @@ if (ENABLE_PYTHON)
             SOURCE_DIR ${PROJECT_BINARY_DIR}
             CONFIGURE_COMMAND ""
             BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
-                -mpip install torch==1.7.0+cpu torchvision==0.8.1+cpu torchaudio==0.7.0
-                -f https://download.pytorch.org/whl/torch_stable.html
+                -mpip install torch==${TORCH_VERSION}+${PYTORCH_DEV}
+                torchvision==${TORCHVISION_VERSION}+${PYTORCH_DEV}
+                torchaudio==${TORCHAUDIO_VERSION}+${PYTORCH_DEV}
+                -f https://download.pytorch.org/whl/${PYTORCH_DEV}/torch_stable.html
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
     else()
-        build_status(pytorch ${PYTORCH_VERSION} Disabled)
+        build_status(pytorch ${TORCH_VERSION} Disabled)
     endif()
 
+    if (ENABLE_TCPYPI)
+        # install tcpyPI
+        build_status(tcpyPI ${TCPYPI_VERSION} Enabled)
+        list(APPEND teca_deps tcpyPI)
+
+        # numba
+        ExternalProject_Add(numba
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install numba==0.53.1
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+
+        # tcpyPI
+        ExternalProject_Add(tcpyPI
+            DEPENDS Python numpy numba
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install tcpyPI==${TCPYPI_VERSION} --no-dependencies
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+    else()
+        build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
+    endif()
+
+    if (ENABLE_CUDA)
+        # install cupy
+        build_status(cupy ${CUPY_VERSION} Enabled)
+        list(APPEND teca_deps cupy)
+        ExternalProject_Add(cupy
+            DEPENDS Python numpy
+            DOWNLOAD_COMMAND ""
+            SOURCE_DIR ${PROJECT_BINARY_DIR}
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND env ${env} ${CMAKE_INSTALL_PREFIX}/bin/python3
+                -mpip install cupy-${CUPY_VERSION}
+            INSTALL_COMMAND ""
+            BUILD_IN_SOURCE 1 LOG_DOWNLOAD 1 LOG_BUILD 1)
+    else()
+        build_status(cupy ${CUPY_VERSION} Disabled)
+    endif()
 
 else()
     build_status(ncurses ${NCURSES_VERSION} Disabled)
@@ -604,6 +666,8 @@ else()
     build_status(mpi4py ${MPI4PY_VERSION} Disabled)
     build_status(matplotlib ${MATPLOTLIB_VERSION} Disabled)
     build_status(pytorch ${PYTORCH_VERSION} Disabled)
+    build_status(tcpyPI ${TCPYPI_VERSION} Disabled)
+    build_status(cupy ${CUPY_VERSION} Disabled)
 endif()
 
 # Build libxlsxwriter.
@@ -635,6 +699,34 @@ else()
     message(STATUS "LIBXLSXWRITER .......... Disabled")
 endif()
 
+# Build libxlsxwriter.
+if (ENABLE_SHAPELIB)
+    message(STATUS "shapelib ............... Enabled")
+    list(APPEND teca_deps shapelib)
+    list(APPEND teca_flags "-DREQUIRE_SHAPELIB=TRUE")
+    ExternalProject_Add(shapelib
+        DOWNLOAD_DIR ${PROJECT_BINARY_DIR}
+        #URL ${TECA_DEPS_URL}/${SHAPELIB_SOURCE}.tar.gz
+        GIT_REPOSITORY ${SHAPELIB_URL}
+        GIT_TAG ${SHAPELIB_SOURCE}
+        UPDATE_COMMAND ""
+        SOURCE_DIR ${PROJECT_BINARY_DIR}/${SHAPELIB_SOURCE}
+        CMAKE_COMMAND env ${env} ${CMAKE_COMMAND}
+            -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+            "-DCMAKE_C_FLAGS=${c_flags}"
+            "-DCMAKE_C_FLAGS_DEBUG=${c_flags}"
+            "-DCMAKE_C_FLAGS_RELEASE=${c_flags}"
+            -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+            "-DCMAKE_CXX_FLAGS=${cxx_flags}"
+            "-DCMAKE_CXX_FLAGS_DEBUG=${cxx_flags}"
+            "-DCMAKE_CXX_FLAGS_RELEASE=${cxx_flags}"
+            "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1)
+else()
+    message(STATUS "shapelib ............... Disabled")
+endif()
+
 # TECA proper
 if (ENABLE_TECA)
     build_status(TECA ${TECA_SOURCE} Enabled)
@@ -660,9 +752,13 @@ if (ENABLE_TECA)
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r101")
         set(TECA_DATA_UPDATE "")
-    elseif (TECA_SOURCE STREQUAL "4.1.0" OR TECA_SOURCE STREQUAL "master")
+    elseif (TECA_SOURCE STREQUAL "4.1.0")
         set(TECA_UPDATE "")
         set(TECA_DATA_REV "-r117")
+        set(TECA_DATA_UPDATE "")
+    elseif (TECA_SOURCE STREQUAL "5.0.0" OR TECA_SOURCE STREQUAL "master")
+        set(TECA_UPDATE "")
+        set(TECA_DATA_REV "-r137")
         set(TECA_DATA_UPDATE "")
     endif()
     set(tmp)
@@ -712,6 +808,7 @@ if (ENABLE_TECA)
             ${teca_flags} ${MPI_FLAGS} -DTECA_HAS_VTK=OFF
             -DTECA_PYTHON_VERSION=3 -DTECA_DATA_ROOT=${TECA_DATA_ROOT}
             -DBUILD_TESTING=${ENABLE_TECA_TEST}
+            -DREQUIRE_CUDA=${ENABLE_CUDA}
             -DTECA_ENABLE_PROFILER=${ENABLE_TECA_PROFILER}
             ${PROJECT_BINARY_DIR}/TECA
         TEST_AFTER_INSTALL ${ENABLE_TECA_TEST}
