@@ -16,9 +16,9 @@ if {[string compare "@ENABLE_CRAY_MPICH@" "ON"] == 0} {
     # make sure we have CUDA gcc compiler modules loaded
     if {[string compare "@ENABLE_CUDA@" "ON"] == 0} {
 
-        prereq cudatoolkit
-        prereq cpe-cuda
-
+        # we don't use this feature which results in additional memory
+        # overheads and is now enabled by default at NERSC
+        setenv MPICH_GPU_SUPPORT_ENABLED 0
     }
 
     # this tells cmake it is OK to build/use shared libraries, otherwise
