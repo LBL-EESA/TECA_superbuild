@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # show what the script is doing and error out if any command fails
-set -e
+#set -e
 #set -x
 
 # is this for the CPU partition or GPU ?
@@ -14,12 +14,14 @@ else
 fi
 
 # load the gcc environment
-module load PrgEnv-gnu
-if [[ "${ENABLE_CUDA}" == "ON" ]]
+module is-loaded PrgEnv-gnu
+have_gcc=$?
+if [[ ${have_gcc} -ne 0 ]]
 then
-    module load cudatoolkit
-    module load cpe-cuda
+    echo "ERROR: The module PrgEnv-gnu is required but not currently loaded."
+    exit -1
 fi
+export MPICH_GPU_SUPPORT_ENABLED=0
 module load cmake
 
 # mpich is not in the pkg-config path on Cori
